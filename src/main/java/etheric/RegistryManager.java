@@ -29,10 +29,10 @@ import net.minecraftforge.registries.IForgeRegistry;
 @ObjectHolder("etheric")
 public class RegistryManager {
 	
-	public static final Block celestial_stone = null;
+	public static final Block celestial_stone = null, rift = null;
 	public static final Item seeing_stone = null;
 	
-	public static final Block rift = null;
+	//public static final Block rift = null;
 	
 	@SubscribeEvent
 	public static void registerBlocks(RegistryEvent.Register<Block> event) {
