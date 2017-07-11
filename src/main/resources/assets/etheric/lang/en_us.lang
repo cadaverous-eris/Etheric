@@ -6,3 +6,6 @@ tile.etheric.celestial_stone.name=Celestial Stone
 
 # Items
 item.etheric.seeing_stone.name=Seeing Stone
+
+# Creative Tabs
+itemGroup.etheric=Etheric

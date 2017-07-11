@@ -29,7 +29,7 @@ public class Etheric {
 	public static CreativeTabs tab = new CreativeTabs("etheric") {
 		@Override
 		public ItemStack getTabIconItem() {
-			return new ItemStack(Items.DRAGON_BREATH);
+			return new ItemStack(RegistryManager.seeing_stone);
 		}
 	};
 	

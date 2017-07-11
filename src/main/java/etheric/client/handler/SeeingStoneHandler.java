@@ -83,7 +83,7 @@ public class SeeingStoneHandler {
 		GlStateManager.pushMatrix();
 		GlStateManager.translate(0F, 0F, -0.1875F);
 		Minecraft.getMinecraft().getRenderItem().renderItem(stack, player,
-				ItemCameraTransforms.TransformType.FIRST_PERSON_RIGHT_HAND, false);
+				ItemCameraTransforms.TransformType.NONE, false);
 		double dummy = Math.abs(Math.sin(player.posX) * Math.cos(player.posZ));
 		String text = ("" + dummy).substring(0, 4);
 		FontRenderer font = Minecraft.getMinecraft().fontRenderer;
