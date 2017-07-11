@@ -1,0 +1,1 @@
+A magic mod based around utilizing the fifth element, quintessence, which is found in a mysterious realm known as the ether, which is also home to a race of primordial beings, the celestials.

@@ -1,0 +1,16 @@
+[
+{
+  "modid": "etheric",
+  "name": "Etheric",
+  "description": "WIP Magic Mod.",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["mangoose"],
+  "credits": "Azanor, Emoniph, Vazkii, and Elucent, for being inspirations.",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]

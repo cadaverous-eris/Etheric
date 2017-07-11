@@ -1,0 +1,7 @@
+start with 11*16 of solid 237 237 237 (0, 0, 92 in HSV) gray
+
+add noise with 20 intensity, 32 color saturation, 72 coverage
+
+resize to 16*16
+
+add noise with 12 intensity, 32 color saturation, 72 coverage
