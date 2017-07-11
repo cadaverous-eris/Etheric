@@ -2,13 +2,15 @@ package etheric;
 
 import etheric.client.renderer.entity.RenderLesserCelestial;
 import etheric.common.block.BlockBase;
+import etheric.common.block.BlockRift;
 import etheric.common.entity.mob.EntityLesserCelestial;
 import etheric.common.item.ItemSeeingStone;
+import etheric.common.tileentity.TileEntityRift;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.entity.Entity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
@@ -30,18 +32,20 @@ public class RegistryManager {
 	public static final Block celestial_stone = null;
 	public static final Item seeing_stone = null;
 	
+	public static final Block rift = null;
+	
 	@SubscribeEvent
 	public static void registerBlocks(RegistryEvent.Register<Block> event) {
 		
 		event.getRegistry().register(new BlockBase("celestial_stone").setHardness(5F).setResistance(1000.0F));
-		
+		event.getRegistry().register(new BlockRift("rift"));
 	}
 	
 	@SubscribeEvent
 	public static void registerItemBlocks(RegistryEvent.Register<Item> event) {
 		
 		registerItemBlock(event.getRegistry(), celestial_stone);
-		
+		registerItemBlock(event.getRegistry(), rift);
 	}
 	
 	@SubscribeEvent
@@ -55,6 +59,7 @@ public class RegistryManager {
     public static void setupModels(ModelRegistryEvent event) {
 		
 		registerBlockModel(celestial_stone);
+		registerBlockModel(rift);
 		registerItemModel(seeing_stone);
 		
 	}
@@ -64,7 +69,6 @@ public class RegistryManager {
 		int id = 0;
 		
 		EntityRegistry.registerModEntity(new ResourceLocation(Etheric.MODID, "lesser_celestial"), EntityLesserCelestial.class, "lesser_celestial", id++, Etheric.MODID, 96, 1, true, 16777215, 13158600);
-		
 	}
 	
 	@SideOnly(Side.CLIENT)
