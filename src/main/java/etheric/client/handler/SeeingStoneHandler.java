@@ -4,6 +4,8 @@ import com.google.common.base.MoreObjects;
 
 import etheric.Etheric;
 import etheric.RegistryManager;
+import etheric.common.network.MessageStabilityRequest;
+import etheric.common.network.PacketHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.AbstractClientPlayer;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -26,6 +28,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumHandSide;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.storage.MapData;
@@ -38,6 +41,11 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 @SideOnly(Side.CLIENT)
 @Mod.EventBusSubscriber(modid = Etheric.MODID, value = {Side.CLIENT})
 public class SeeingStoneHandler {
+	
+	public static float stabilityDisplayValue;
+	private static ChunkPos chunkPos = null;
+	private static ChunkPos prevChunkPos = null;
+	private static int dimId, prevDimId;
 
 	@SubscribeEvent
 	public static void renderSeeingStone(RenderHandEvent event) {
@@ -68,6 +76,17 @@ public class SeeingStoneHandler {
 		}
 		
 		event.setCanceled(true);
+		
+		prevChunkPos = chunkPos;
+		chunkPos = new ChunkPos(player.getPosition());
+		prevDimId = dimId;
+		dimId = player.dimension;
+		
+		if (prevChunkPos == null || chunkPos == null) {
+			updateStabilityData(player);
+		} else if (!prevChunkPos.equals(chunkPos) || prevDimId != dimId) {
+			updateStabilityData(player);
+		}
 
 		Minecraft.getMinecraft().entityRenderer.enableLightmap();
 		int i = Minecraft.getMinecraft().world.getCombinedLight(
@@ -84,8 +103,10 @@ public class SeeingStoneHandler {
 		GlStateManager.translate(0F, 0F, -0.1875F);
 		Minecraft.getMinecraft().getRenderItem().renderItem(stack, player,
 				ItemCameraTransforms.TransformType.NONE, false);
-		double dummy = Math.abs(Math.sin(player.posX) * Math.cos(player.posZ));
-		String text = ("" + dummy).substring(0, 4);
+		String text = ("" + stabilityDisplayValue);
+		if (text.length() > 5) {
+			text = text.substring(0, 5);
+		}
 		FontRenderer font = Minecraft.getMinecraft().fontRenderer;
 		int length = font.getStringWidth(text);
 		float scale = 0.00375F;
@@ -100,6 +121,10 @@ public class SeeingStoneHandler {
 
 		GlStateManager.popMatrix();
 
+	}
+	
+	private static void updateStabilityData(EntityPlayer player) {
+		PacketHandler.INSTANCE.sendToServer(new MessageStabilityRequest(player.getPosition(), player.getUniqueID()));
 	}
 
 	private static void renderArms() {

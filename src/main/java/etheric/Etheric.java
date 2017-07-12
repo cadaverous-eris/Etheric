@@ -5,9 +5,12 @@ import org.apache.logging.log4j.Logger;
 import etheric.common.CommonProxy;
 import etheric.common.network.PacketHandler;
 import etheric.common.tileentity.TileEntityRift;
+import etheric.common.world.gen.EthericWorldGenerator;
+import etheric.common.world.stability.StabilityHandler;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -45,6 +48,7 @@ public class Etheric {
 	public void preInit(FMLPreInitializationEvent event) {
 		PacketHandler.registerMessages();
 		proxy.preInit(event);
+		GameRegistry.registerWorldGenerator(new EthericWorldGenerator(), 0);
 	}
 	
 	@EventHandler
