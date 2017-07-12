@@ -20,6 +20,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.EntityRegistry;
+import net.minecraftforge.fml.common.registry.GameRegistry;
 import net.minecraftforge.fml.common.registry.GameRegistry.ObjectHolder;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -37,6 +38,8 @@ public class RegistryManager {
 		
 		event.getRegistry().register(new BlockBase("celestial_stone").setHardness(5F).setResistance(1000.0F));
 		event.getRegistry().register(new BlockRift("rift"));
+		
+		GameRegistry.registerTileEntity(TileEntityRift.class, Etheric.MODID + ":rift");
 	}
 	
 	@SubscribeEvent

@@ -1,5 +1,9 @@
 package etheric;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import etheric.common.CommonProxy;
+import etheric.common.network.PacketHandler;
 import etheric.common.tileentity.TileEntityRift;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Items;
@@ -28,6 +32,8 @@ public class Etheric {
 	@SidedProxy(clientSide = "etheric.client.ClientProxy", serverSide = "etheric.common.CommonProxy")
 	public static CommonProxy proxy;
 	
+	public static final Logger logger = LogManager.getLogger(MODID);
+	
 	public static CreativeTabs tab = new CreativeTabs("etheric") {
 		@Override
 		public ItemStack getTabIconItem() {
@@ -37,8 +43,8 @@ public class Etheric {
 	
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
+		PacketHandler.registerMessages();
 		proxy.preInit(event);
-		GameRegistry.registerTileEntity(TileEntityRift.class, "rift");
 	}
 	
 	@EventHandler
