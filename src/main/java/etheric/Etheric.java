@@ -6,6 +6,9 @@ import org.apache.logging.log4j.Logger;
 
 import etheric.common.CommonProxy;
 import etheric.common.Config;
+import etheric.common.block.DefaultQuintessenceCapability;
+import etheric.common.capabilty.IQuintessenceCapability;
+import etheric.common.capabilty.QuintessenceCapabilityStorage;
 import etheric.common.network.PacketHandler;
 import etheric.common.tileentity.TileEntityRift;
 import etheric.common.world.gen.EthericWorldGenerator;
@@ -14,6 +17,7 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.capabilities.CapabilityManager;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
@@ -58,6 +62,8 @@ public class Etheric {
         config = new Configuration(new File(directory.getPath(), "etheric.cfg"));
         Config.readConfig();
 		
+        CapabilityManager.INSTANCE.register(IQuintessenceCapability.class, new QuintessenceCapabilityStorage(), DefaultQuintessenceCapability.class);
+        
 		proxy.preInit(event);
 		
 		GameRegistry.registerWorldGenerator(new EthericWorldGenerator(), 0);
