@@ -3,6 +3,7 @@ package etheric.common.block;
 import etheric.Etheric;
 import etheric.common.capabilty.IQuintessenceCapability;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.MathHelper;
 
 public class DefaultQuintessenceCapability implements IQuintessenceCapability {
 	
@@ -45,7 +46,7 @@ public class DefaultQuintessenceCapability implements IQuintessenceCapability {
 
 	@Override
 	public void setPurity(float purity) {
-		this.purity = purity;
+		this.purity = MathHelper.clamp(purity, -1F, 1F);
 	}
 
 	@Override
@@ -69,7 +70,8 @@ public class DefaultQuintessenceCapability implements IQuintessenceCapability {
 			float added = addAmount(amount, false);
 			float total = this.amount + added;
 			
-			this.purity = ((this.amount / total) * this.purity) + ((added / total) * purity) / 2F;
+			float p = ((this.amount / total) * this.purity) + ((added / total) * purity) / 2F;
+			this.purity = MathHelper.clamp(p, -1F, 1F);
 		}
 		return addAmount(purity, doAdd);
 	}
