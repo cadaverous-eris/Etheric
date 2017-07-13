@@ -1,6 +1,5 @@
 package etheric.common.capabilty;
 
-import etheric.common.block.DefaultQuintessenceCapability;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.CapabilityInject;

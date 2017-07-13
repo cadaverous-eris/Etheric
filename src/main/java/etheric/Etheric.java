@@ -6,7 +6,7 @@ import org.apache.logging.log4j.Logger;
 
 import etheric.common.CommonProxy;
 import etheric.common.Config;
-import etheric.common.block.DefaultQuintessenceCapability;
+import etheric.common.capabilty.DefaultQuintessenceCapability;
 import etheric.common.capabilty.IQuintessenceCapability;
 import etheric.common.capabilty.QuintessenceCapabilityStorage;
 import etheric.common.network.PacketHandler;

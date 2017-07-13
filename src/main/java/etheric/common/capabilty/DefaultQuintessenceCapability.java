@@ -1,7 +1,6 @@
-package etheric.common.block;
+package etheric.common.capabilty;
 
 import etheric.Etheric;
-import etheric.common.capabilty.IQuintessenceCapability;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.MathHelper;
 
