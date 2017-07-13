@@ -4,16 +4,16 @@ import net.minecraft.nbt.NBTTagCompound;
 
 public interface IQuintessenceCapability {
 	
-	public float getAmount();
-	public float getCapacity();
+	public int getAmount();
+	public int getCapacity();
 	public float getPurity();
-	public void setAmount(float amount);
-	public void setCapacity(float capacity);
+	public void setAmount(int amount);
+	public void setCapacity(int capacity);
 	public void setPurity(float purity);
 	
-	public float addAmount(float amount, boolean doAdd);
-	public float addAmount(float amount, float purity, boolean doAdd);
-	public float removeAmount(float amount, boolean doRemove);
+	public int addAmount(int amount, boolean doAdd);
+	public int addAmount(int amount, float purity, boolean doAdd);
+	public int removeAmount(int amount, boolean doRemove);
 	
 	public void writeToNBT(NBTTagCompound tag);
 	public void readFromNBT(NBTTagCompound tag);

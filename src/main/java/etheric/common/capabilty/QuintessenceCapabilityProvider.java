@@ -18,7 +18,7 @@ public class QuintessenceCapabilityProvider implements ICapabilityProvider {
 	}
 
 	@CapabilityInject(IQuintessenceCapability.class)
-	public static final Capability<IQuintessenceCapability> quintessenceCapability = null;
+	public static Capability<IQuintessenceCapability> quintessenceCapability = null;
 
 	@Override
 	public boolean hasCapability(Capability<?> capability, EnumFacing facing) {

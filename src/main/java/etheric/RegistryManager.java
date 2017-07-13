@@ -2,10 +2,16 @@ package etheric;
 
 import etheric.client.renderer.entity.RenderLesserCelestial;
 import etheric.common.block.BlockBase;
+import etheric.common.block.BlockCreativeTank;
+import etheric.common.block.BlockPipe;
 import etheric.common.block.BlockRift;
+import etheric.common.block.BlockTestTank;
 import etheric.common.entity.mob.EntityLesserCelestial;
 import etheric.common.item.ItemSeeingStone;
+import etheric.common.tileentity.TileEntityCreativeTank;
+import etheric.common.tileentity.TileEntityPipe;
 import etheric.common.tileentity.TileEntityRift;
+import etheric.common.tileentity.TileEntityTestTank;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
 import net.minecraft.item.Item;
@@ -30,7 +36,8 @@ import net.minecraftforge.registries.IForgeRegistry;
 @ObjectHolder("etheric")
 public class RegistryManager {
 	
-	public static final Block celestial_stone = null, rift = null;
+	public static final Block celestial_stone = null, rift = null, pipe = null;
+	public static final Block creative_tank = null, test_tank = null;
 	public static final Item seeing_stone = null;
 	
 	@SubscribeEvent
@@ -38,8 +45,16 @@ public class RegistryManager {
 		
 		event.getRegistry().register(new BlockBase("celestial_stone").setHardness(5F).setResistance(1000.0F));
 		event.getRegistry().register(new BlockRift("rift"));
+		event.getRegistry().register(new BlockPipe("pipe"));
+		
+		event.getRegistry().register(new BlockCreativeTank());
+		event.getRegistry().register(new BlockTestTank());
 		
 		GameRegistry.registerTileEntity(TileEntityRift.class, Etheric.MODID + ":rift");
+		GameRegistry.registerTileEntity(TileEntityPipe.class, Etheric.MODID + ":pipe");
+		
+		GameRegistry.registerTileEntity(TileEntityCreativeTank.class, Etheric.MODID + ":creative_tank");
+		GameRegistry.registerTileEntity(TileEntityTestTank.class, Etheric.MODID + ":test_tank");
 	}
 	
 	@SubscribeEvent
@@ -47,6 +62,11 @@ public class RegistryManager {
 		
 		registerItemBlock(event.getRegistry(), celestial_stone);
 		registerItemBlock(event.getRegistry(), rift);
+		registerItemBlock(event.getRegistry(), pipe);
+		
+		registerItemBlock(event.getRegistry(), creative_tank);
+		registerItemBlock(event.getRegistry(), test_tank);
+		
 	}
 	
 	@SubscribeEvent

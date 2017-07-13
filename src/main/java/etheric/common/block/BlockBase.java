@@ -11,9 +11,9 @@ import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class BlockBase extends Block {
-
-	public BlockBase(String name) {
-		super(Material.ROCK);
+	
+	public BlockBase(String name, Material mat) {
+		super(mat);
 		
 		setRegistryName(Etheric.MODID, name);
 		setUnlocalizedName(Etheric.MODID + "." + name);
@@ -22,6 +22,11 @@ public class BlockBase extends Block {
 		setSoundType(SoundType.STONE);
 		
 		setCreativeTab(Etheric.tab);
+	}
+	
+
+	public BlockBase(String name) {
+		this (name, Material.ROCK);
 	}
 
 }
