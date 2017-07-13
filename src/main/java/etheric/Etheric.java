@@ -1,8 +1,11 @@
 package etheric;
+import java.io.File;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import etheric.common.CommonProxy;
+import etheric.common.Config;
 import etheric.common.network.PacketHandler;
 import etheric.common.tileentity.TileEntityRift;
 import etheric.common.world.gen.EthericWorldGenerator;
@@ -11,6 +14,7 @@ import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -37,6 +41,8 @@ public class Etheric {
 	
 	public static final Logger logger = LogManager.getLogger(MODID);
 	
+	public static Configuration config;
+	
 	public static CreativeTabs tab = new CreativeTabs("etheric") {
 		@Override
 		public ItemStack getTabIconItem() {
@@ -47,7 +53,13 @@ public class Etheric {
 	@EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
 		PacketHandler.registerMessages();
+		
+		File directory = event.getModConfigurationDirectory();
+        config = new Configuration(new File(directory.getPath(), "etheric.cfg"));
+        Config.readConfig();
+		
 		proxy.preInit(event);
+		
 		GameRegistry.registerWorldGenerator(new EthericWorldGenerator(), 0);
 	}
 	
@@ -59,6 +71,10 @@ public class Etheric {
 	@EventHandler
 	public void postInit(FMLPostInitializationEvent event) {
 		proxy.postInit(event);
+		
+		if (config.hasChanged()) {
+            config.save();
+        }
 	}
 
 }
