@@ -49,16 +49,19 @@ public class DefaultQuintessenceCapability implements IQuintessenceCapability {
 			this.purity = 0;
 		}
 		this.amount = amount;
+		onContentsChanged();
 	}
 
 	@Override
 	public void setCapacity(int capacity) {
 		this.capacity = capacity;
+		onContentsChanged();
 	}
 
 	@Override
 	public void setPurity(float purity) {
 		this.purity = MathHelper.clamp(purity, -1F, 1F);
+		onContentsChanged();
 	}
 
 	@Override
@@ -72,6 +75,7 @@ public class DefaultQuintessenceCapability implements IQuintessenceCapability {
 			if (this.amount <= 0) {
 				this.purity = 0;
 			}
+			onContentsChanged();
 		}
 		return added;
 	}
@@ -99,6 +103,7 @@ public class DefaultQuintessenceCapability implements IQuintessenceCapability {
 			if (this.amount <= 0) {
 				this.purity = 0;
 			}
+			onContentsChanged();
 		}
 		return removed;
 	}
@@ -121,6 +126,10 @@ public class DefaultQuintessenceCapability implements IQuintessenceCapability {
 		if (tag.hasKey(PURITY_TAG)) {
 			this.purity = tag.getFloat(PURITY_TAG);
 		}
+	}
+	
+	public void onContentsChanged() {
+		
 	}
 
 }

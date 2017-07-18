@@ -6,6 +6,7 @@ import javax.annotation.Nullable;
 import etheric.common.capabilty.DefaultQuintessenceCapability;
 import etheric.common.capabilty.ISuctionProvider;
 import etheric.common.capabilty.QuintessenceCapabilityProvider;
+import etheric.common.capabilty.Suction;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -20,14 +21,14 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 
 public class TileEntityTestTank extends TEBase implements ISuctionProvider {
-	
+
 	private DefaultQuintessenceCapability internalTank = new DefaultQuintessenceCapability(64);
 
 	@Override
-	public int getSuction() {
-		return 50;
+	public Suction getSuction() {
+		return new Suction(50);
 	}
-	
+
 	@Override
 	public boolean hasCapability(@Nonnull Capability<?> capability, @Nullable EnumFacing facing) {
 		return capability == QuintessenceCapabilityProvider.quintessenceCapability
@@ -43,7 +44,7 @@ public class TileEntityTestTank extends TEBase implements ISuctionProvider {
 		}
 		return super.getCapability(capability, facing);
 	}
-	
+
 	@Override
 	public void readFromNBT(NBTTagCompound tag) {
 		super.readFromNBT(tag);
@@ -60,10 +61,13 @@ public class TileEntityTestTank extends TEBase implements ISuctionProvider {
 		tag.setTag("quintessence", qTag);
 		return tag;
 	}
-	
+
 	public boolean activate(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand,
 			EnumFacing side, float hitX, float hitY, float hitZ) {
-		player.sendMessage(new TextComponentString("Quintessence: " + internalTank.getAmount() + ", Purity: " + internalTank.getPurity()));
+		if (!world.isRemote) {
+			player.sendMessage(new TextComponentString(
+					"Quintessence: " + internalTank.getAmount() + ", Purity: " + internalTank.getPurity()));
+		}
 		return true;
 	}
 

@@ -10,6 +10,7 @@ import etheric.common.capabilty.DefaultQuintessenceCapability;
 import etheric.common.capabilty.IQuintessenceCapability;
 import etheric.common.capabilty.ISuctionProvider;
 import etheric.common.capabilty.QuintessenceCapabilityProvider;
+import etheric.common.capabilty.Suction;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ITickable;
@@ -33,35 +34,29 @@ public class TileEntityCreativeTank extends TEBase implements ITickable, ISuctio
 	}
 
 	@Override
-	public int getSuction() {
-		return 0;
+	public Suction getSuction() {
+		return Suction.NO_SUCTION;
 	}
 	
 	private void flow() {
-		int[] suctions = new int[6];
+		Suction[] suctions = new Suction[6];
 		int maxSuc = 0;
 		for (EnumFacing facing : EnumFacing.VALUES) {
 			TileEntity te = world.getTileEntity(pos.offset(facing));
 			if (te != null && te instanceof ISuctionProvider) {
-				int suc = ((ISuctionProvider) te).getSuction();
-				if (suc > getSuction()) {
-					suctions[facing.getIndex()] = suc;
-					if (suc > maxSuc) {
-						maxSuc = suc;
+				Suction suc = ((ISuctionProvider) te).getSuction();
+				if (suc.strength > getSuction().strength && suc.minPurity <= internalTank.getPurity() && suc.maxPurity >= internalTank.getPurity()) {
+					suctions[facing.getIndex()] = suc.copy();
+					if (suc.strength > maxSuc) {
+						maxSuc = suc.strength;
 					}
 				}
 			}
 		}
-		List<EnumFacing> flowDirs = new ArrayList<EnumFacing>();
 		for (int i = 0; i < suctions.length; i++) {
-			if (suctions[i] == maxSuc && maxSuc > 0) {
-				flowDirs.add(EnumFacing.getFront(i));
+			if ((suctions[i] != null) && (suctions[i].strength == maxSuc) && maxSuc > 0) {
+				flow(EnumFacing.getFront(i));
 			}
-		}
-		if (flowDirs.size() > 1) {
-			flow(flowDirs.get(world.rand.nextInt(flowDirs.size())));
-		} else if (flowDirs.size() > 0) {
-			flow(flowDirs.get(0));
 		}
 	}
 	

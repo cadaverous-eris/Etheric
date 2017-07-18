@@ -12,6 +12,7 @@ import etheric.common.capabilty.DefaultQuintessenceCapability;
 import etheric.common.capabilty.IQuintessenceCapability;
 import etheric.common.capabilty.ISuctionProvider;
 import etheric.common.capabilty.QuintessenceCapabilityProvider;
+import etheric.common.capabilty.Suction;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -27,7 +28,7 @@ import net.minecraftforge.common.capabilities.Capability;
 public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvider {
 
 	private DefaultQuintessenceCapability internalTank = new DefaultQuintessenceCapability(4);
-	private int suction = 0;
+	private Suction suction = Suction.NO_SUCTION;
 	// d u n s w e
 	private boolean[] connections = { false, false, false, false, false, false };
 	private int ticks = 0;
@@ -85,40 +86,40 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 
 	// get the S U C C
 	@Override
-	public int getSuction() {
-		return suction;
+	public Suction getSuction() {
+		return suction.copy();
 	}
 
 	public void updateSuction() {
-		int suc = 0;
+		Suction suc = Suction.NO_SUCTION;
 		for (int i = 0; i < connections.length; i++) {
 			if (connections[i]) {
 				EnumFacing facing = EnumFacing.getFront(i);
 				TileEntity te = world.getTileEntity(pos.offset(facing));
 				if (te != null && te instanceof ISuctionProvider) {
-					int teSuc = ((ISuctionProvider) world.getTileEntity(pos.offset(facing))).getSuction();
-					if (teSuc > suc) {
-						suc = teSuc;
+					Suction teSuc = ((ISuctionProvider) world.getTileEntity(pos.offset(facing))).getSuction();
+					if (teSuc.strength > suc.strength) {
+						suc = teSuc.copy();
 					}
 				}
 			}
 		}
-		suction = suc > 0 ? suc - 1 : 0;
+		suction = suc.strength > 0 ? new Suction(suc.strength - 1, suc.minPurity, suc.maxPurity) : Suction.NO_SUCTION;
 	}
 
 	private void flow() {
-		int[] suctions = new int[6];
+		Suction[] suctions = new Suction[6];
 		int maxSuc = 0;
 		for (int i = 0; i < 6; i++) {
 			if (connections[i]) {
 				EnumFacing facing = EnumFacing.getFront(i);
 				TileEntity te = world.getTileEntity(pos.offset(facing));
 				if (te != null && te instanceof ISuctionProvider) {
-					int suc = ((ISuctionProvider) te).getSuction();
-					if (suc > getSuction()) {
-						suctions[facing.getIndex()] = suc;
-						if (suc > maxSuc) {
-							maxSuc = suc;
+					Suction suc = ((ISuctionProvider) te).getSuction();
+					if (suc.strength > suction.strength && suc.minPurity <= internalTank.getPurity() && suc.maxPurity >= internalTank.getPurity()) {
+						suctions[facing.getIndex()] = suc.copy();
+						if (suc.strength > maxSuc) {
+							maxSuc = suc.strength;
 						}
 					}
 				}
@@ -126,7 +127,7 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 		}
 		List<EnumFacing> flowDirs = new ArrayList<EnumFacing>();
 		for (int i = 0; i < suctions.length; i++) {
-			if (suctions[i] == maxSuc) {
+			if (suctions[i] != null && suctions[i].strength == maxSuc) {
 				flowDirs.add(EnumFacing.getFront(i));
 			}
 		}
@@ -167,9 +168,7 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 		if (tag.hasKey("quintessence")) {
 			internalTank.readFromNBT((NBTTagCompound) tag.getTag("quintessence"));
 		}
-		if (tag.hasKey("suction")) {
-			suction = tag.getInteger("suction");
-		}
+		suction = Suction.readFromNBT(tag);
 		if (tag.hasKey("connections")) {
 			deserializeConnections(tag.getInteger("connections"));
 		}
@@ -181,7 +180,7 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 		NBTTagCompound qTag = new NBTTagCompound();
 		internalTank.writeToNBT(qTag);
 		tag.setTag("quintessence", qTag);
-		tag.setInteger("suction", suction);
+		suction.writeToNBT(tag);
 		tag.setInteger("connections", serializeConnections());
 		return tag;
 	}
