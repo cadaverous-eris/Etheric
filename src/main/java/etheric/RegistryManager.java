@@ -4,10 +4,12 @@ import etheric.client.renderer.entity.RenderLesserCelestial;
 import etheric.client.renderer.tileentity.TileEntityPipeRenderer;
 import etheric.common.block.BlockBase;
 import etheric.common.block.BlockCreativeTank;
+import etheric.common.block.BlockLodestoneOre;
 import etheric.common.block.BlockPipe;
 import etheric.common.block.BlockRift;
 import etheric.common.block.BlockTestTank;
 import etheric.common.entity.mob.EntityLesserCelestial;
+import etheric.common.item.ItemMaterial;
 import etheric.common.item.ItemSeeingStone;
 import etheric.common.tileentity.TileEntityCreativeTank;
 import etheric.common.tileentity.TileEntityPipe;
@@ -40,13 +42,14 @@ import net.minecraftforge.registries.IForgeRegistry;
 @ObjectHolder("etheric")
 public class RegistryManager {
 	
-	public static final Block celestial_stone = null, rift = null, pipe = null;
+	public static final Block lodestone_ore = null, celestial_stone = null, rift = null, pipe = null;
 	public static final Block creative_tank = null, test_tank = null;
-	public static final Item seeing_stone = null;
+	public static final Item material = null, seeing_stone = null;
 	
 	@SubscribeEvent
 	public static void registerBlocks(RegistryEvent.Register<Block> event) {
 		
+		event.getRegistry().register(new BlockLodestoneOre());
 		event.getRegistry().register(new BlockBase("celestial_stone").setHardness(5F).setResistance(1000.0F));
 		event.getRegistry().register(new BlockRift("rift"));
 		event.getRegistry().register(new BlockPipe("pipe"));
@@ -59,11 +62,13 @@ public class RegistryManager {
 		
 		GameRegistry.registerTileEntity(TileEntityCreativeTank.class, Etheric.MODID + ":creative_tank");
 		GameRegistry.registerTileEntity(TileEntityTestTank.class, Etheric.MODID + ":test_tank");
+		
 	}
 	
 	@SubscribeEvent
 	public static void registerItemBlocks(RegistryEvent.Register<Item> event) {
 		
+		registerItemBlock(event.getRegistry(), lodestone_ore);
 		registerItemBlock(event.getRegistry(), celestial_stone);
 		registerItemBlock(event.getRegistry(), rift);
 		registerItemBlock(event.getRegistry(), pipe);
@@ -76,6 +81,7 @@ public class RegistryManager {
 	@SubscribeEvent
 	public static void registerItems(RegistryEvent.Register<Item> event) {
 		
+		event.getRegistry().register(new ItemMaterial());
 		event.getRegistry().register(new ItemSeeingStone());
 		
 	}
@@ -83,10 +89,12 @@ public class RegistryManager {
 	@SubscribeEvent
     public static void setupModels(ModelRegistryEvent event) {
 		
+		registerBlockModel(lodestone_ore);
 		registerBlockModel(celestial_stone);
 		registerBlockModel(rift);
 		registerBlockModel(pipe);
 		
+		((ItemMaterial) material).registerModels();
 		registerItemModel(seeing_stone);
 		
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPipe.class, new TileEntityPipeRenderer());
