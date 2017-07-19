@@ -1,5 +1,8 @@
 package etheric.common.block;
 
+import etheric.common.block.property.UnlistedPropertyFloat;
+import etheric.common.block.property.UnlistedPropertyInt;
+import etheric.common.capabilty.IQuintessenceCapability;
 import etheric.common.capabilty.QuintessenceCapabilityProvider;
 import etheric.common.tileentity.TileEntityPipe;
 import etheric.common.tileentity.TileEntityTestTank;
@@ -7,47 +10,68 @@ import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.common.property.ExtendedBlockState;
 import net.minecraftforge.common.property.IExtendedBlockState;
+import net.minecraftforge.common.property.IUnlistedProperty;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 public class BlockPipe extends BlockBase implements ITileEntityProvider {
-	
-	public static final PropertyBool[] CONNECTIONS = {
-			PropertyBool.create("down"),
-			PropertyBool.create("up"),
-			PropertyBool.create("north"),
-			PropertyBool.create("south"),
-			PropertyBool.create("west"),
-			PropertyBool.create("east")
-		};
+
+	public static final UnlistedPropertyInt[] CONNECTIONS = { new UnlistedPropertyInt("down"),
+			new UnlistedPropertyInt("up"), new UnlistedPropertyInt("north"), new UnlistedPropertyInt("south"),
+			new UnlistedPropertyInt("west"), new UnlistedPropertyInt("east") };
+	public static final UnlistedPropertyInt QUINTESSENCE = new UnlistedPropertyInt("quintessence");
+	public static final UnlistedPropertyFloat PURITY = new UnlistedPropertyFloat("purity");
 
 	public BlockPipe(String name) {
 		super(name, Material.ROCK);
-		
+
 		setSoundType(SoundType.GLASS);
 		setHardness(2F);
-		
-		IBlockState state = this.blockState.getBaseState();
-		for (int i = 0; i < 6; i++) {
-			state = state.withProperty(CONNECTIONS[i], false);
-		}
-		setDefaultState(state);
+
+		setDefaultState(this.blockState.getBaseState());
 	}
 
 	@Override
 	public TileEntity createNewTileEntity(World worldIn, int meta) {
 		return new TileEntityPipe();
 	}
+
+	@Override
+	public boolean isOpaqueCube(IBlockState state) {
+		return false;
+	}
+
+	@Override
+	public boolean isFullCube(IBlockState state) {
+		return false;
+	}
+
+	@Override
+	@SideOnly(Side.CLIENT)
+	public BlockRenderLayer getBlockLayer() {
+		return BlockRenderLayer.CUTOUT;
+	}
 	
+	@Override
+	@SideOnly(Side.CLIENT)
+    public boolean shouldSideBeRendered(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side) {
+		return true;
+	}
+
 	@Override
 	public void breakBlock(World worldIn, BlockPos pos, IBlockState state) {
 		if (worldIn.getTileEntity(pos) != null && worldIn.getTileEntity(pos) instanceof TileEntityPipe) {
@@ -56,42 +80,60 @@ public class BlockPipe extends BlockBase implements ITileEntityProvider {
 		worldIn.removeTileEntity(pos);
 		super.breakBlock(worldIn, pos, state);
 	}
-	
+
 	@Override
 	public IBlockState getExtendedState(IBlockState state, IBlockAccess world, BlockPos pos) {
-		TileEntity te = world.getTileEntity(pos);
-		if (te != null && te instanceof TileEntityPipe) {
-			TileEntityPipe tep = (TileEntityPipe) te;
-			for (int i = 0; i < 6; i++) {
-				boolean connected = tep.getConnection(i);
-				state = state.withProperty(CONNECTIONS[i], connected);
-			}
+		IExtendedBlockState extendedState = (IExtendedBlockState) state;
+		for (int i = 0; i < CONNECTIONS.length; i++) {
+			int connected = getConnection(world, pos, EnumFacing.getFront(i));
+			extendedState = extendedState.withProperty(CONNECTIONS[i], connected);
 		}
-		return state;
+		if (world.getTileEntity(pos) != null) {
+			TileEntityPipe te = (TileEntityPipe) world.getTileEntity(pos);
+			IQuintessenceCapability teQ = te.getCapability(QuintessenceCapabilityProvider.quintessenceCapability, null);
+			
+			extendedState = extendedState.withProperty(QUINTESSENCE, teQ.getAmount());
+			extendedState = extendedState.withProperty(PURITY, teQ.getPurity());
+		}
+		return extendedState;
 	}
 	
+	private int getConnection(IBlockAccess world, BlockPos pos, EnumFacing dir) {
+		TileEntity te = world.getTileEntity(pos.offset(dir));
+		if (world.getBlockState(pos.offset(dir)).getBlock() == this) {
+			return 1;
+		}
+		if (te != null && te.hasCapability(QuintessenceCapabilityProvider.quintessenceCapability, dir)) {
+			return 2;
+		}
+		
+		return 0;
+	}
+
 	@Override
-	public void neighborChanged(IBlockState state, World world, BlockPos pos, Block block, BlockPos fromPos){
-		TileEntityPipe te = (TileEntityPipe)world.getTileEntity(pos);
+	public void neighborChanged(IBlockState state, World world, BlockPos pos, Block block, BlockPos fromPos) {
+		super.neighborChanged(state, world, pos, block, fromPos);
+		TileEntityPipe te = (TileEntityPipe) world.getTileEntity(pos);
 		te.updateConnections();
 		te.markDirty();
 	}
-	
+
 	@Override
-	public void onBlockAdded(World world, BlockPos pos, IBlockState state){
-		if (world.getTileEntity(pos) instanceof TileEntityPipe){
+	public void onBlockAdded(World world, BlockPos pos, IBlockState state) {
+		super.onBlockAdded(world, pos, state);
+		if (world.getTileEntity(pos) instanceof TileEntityPipe) {
 			((TileEntityPipe) world.getTileEntity(pos)).updateConnections();
 			world.getTileEntity(pos).markDirty();
 		}
 	}
-	
+
 	@Override
 	public boolean eventReceived(IBlockState state, World worldIn, BlockPos pos, int id, int param) {
 		super.eventReceived(state, worldIn, pos, id, param);
 		TileEntity tileentity = worldIn.getTileEntity(pos);
 		return tileentity == null ? false : tileentity.receiveClientEvent(id, param);
 	}
-	
+
 	@Override
 	public IBlockState getStateFromMeta(int meta) {
 		IBlockState state = this.getDefaultState();
@@ -102,17 +144,27 @@ public class BlockPipe extends BlockBase implements ITileEntityProvider {
 	public int getMetaFromState(IBlockState state) {
 		return 0;
 	}
-	
+
 	@Override
 	protected BlockStateContainer createBlockState() {
-		return new BlockStateContainer(this, CONNECTIONS);
+		IUnlistedProperty[] unlisted = new IUnlistedProperty[] {
+				CONNECTIONS[0],
+				CONNECTIONS[1],
+				CONNECTIONS[2],
+				CONNECTIONS[3],
+				CONNECTIONS[4],
+				CONNECTIONS[5],
+				QUINTESSENCE,
+				PURITY
+		};
+		return new ExtendedBlockState(this, new IProperty[] {}, unlisted);
 	}
-	
+
 	@Override
 	public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand,
 			EnumFacing side, float hitX, float hitY, float hitZ) {
-		return ((TileEntityPipe) world.getTileEntity(pos)).activate(world, pos, state, player, hand, side, hitX,
-				hitY, hitZ);
+		return ((TileEntityPipe) world.getTileEntity(pos)).activate(world, pos, state, player, hand, side, hitX, hitY,
+				hitZ);
 	}
 
 }

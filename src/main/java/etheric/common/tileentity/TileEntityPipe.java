@@ -27,7 +27,14 @@ import net.minecraftforge.common.capabilities.Capability;
 
 public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvider {
 
-	private DefaultQuintessenceCapability internalTank = new DefaultQuintessenceCapability(4);
+	private DefaultQuintessenceCapability internalTank = new DefaultQuintessenceCapability(4) {
+		@Override
+		public void onContentsChanged() {
+			TileEntityPipe.this.markDirty();
+			TileEntityPipe.this.world.notifyNeighborsOfStateChange(TileEntityPipe.this.pos, TileEntityPipe.this.getBlockType(), true);
+			TileEntityPipe.this.world.notifyBlockUpdate(pos, getWorld().getBlockState(pos), getWorld().getBlockState(pos), 3);
+		}
+	};
 	private Suction suction = Suction.NO_SUCTION;
 	// d u n s w e
 	private boolean[] connections = { false, false, false, false, false, false };
@@ -54,11 +61,17 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 	}
 
 	public void updateConnections() {
+		boolean update = false;
 		for (EnumFacing facing : EnumFacing.VALUES) {
 			TileEntity te = world.getTileEntity(pos.offset(facing));
 			boolean connect = te != null
 					&& te.hasCapability(QuintessenceCapabilityProvider.quintessenceCapability, facing.getOpposite());
+			if (connections[facing.getIndex()] != connect) {
+				update = true;
+			}
 			connections[facing.getIndex()] = connect;
+		}
+		if (update) {
 			getWorld().notifyBlockUpdate(pos, getWorld().getBlockState(pos), getWorld().getBlockState(pos), 3);
 			this.markDirty();
 		}
@@ -78,6 +91,10 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 		} else {
 			return super.receiveClientEvent(id, type);
 		}
+	}
+
+	public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newSate) {
+		return oldState.getBlock() != newSate.getBlock();
 	}
 
 	public void breakBlock(IBlockState state) {
@@ -116,7 +133,8 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 				TileEntity te = world.getTileEntity(pos.offset(facing));
 				if (te != null && te instanceof ISuctionProvider) {
 					Suction suc = ((ISuctionProvider) te).getSuction();
-					if (suc.strength > suction.strength && suc.minPurity <= internalTank.getPurity() && suc.maxPurity >= internalTank.getPurity()) {
+					if (suc.strength > suction.strength && suc.minPurity <= internalTank.getPurity()
+							&& suc.maxPurity >= internalTank.getPurity()) {
 						suctions[facing.getIndex()] = suc.copy();
 						if (suc.strength > maxSuc) {
 							maxSuc = suc.strength;
@@ -146,7 +164,7 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 		IQuintessenceCapability flowInto = te.getCapability(QuintessenceCapabilityProvider.quintessenceCapability,
 				dir.getOpposite());
 		if (flowInto != null) {
-			internalTank.removeAmount(flowInto.addAmount(internalTank.getAmount(), internalTank.getPurity(), true),
+			internalTank.removeAmount(flowInto.addAmount(Math.min(1, internalTank.getAmount()), internalTank.getPurity(), true),
 					true);
 		}
 	}
@@ -154,10 +172,13 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 	@Override
 	public void update() {
 		if (ticks % 10 == 0) {
+			updateConnections();
 			updateSuction();
 			if (!world.isRemote) {
 				flow();
 			}
+			getWorld().notifyBlockUpdate(pos, getWorld().getBlockState(pos), getWorld().getBlockState(pos), 3);
+			this.markDirty();
 		}
 		ticks++;
 	}
@@ -203,12 +224,17 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 
 	public boolean activate(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand,
 			EnumFacing side, float hitX, float hitY, float hitZ) {
-		String con = "[";
-		for (boolean b : connections) {
-			con += (b + ", ");
-		}
+		//String con = "[";
+		//for (boolean b : connections) {
+		//	con += (b + ", ");
+		//}
+		//if (!world.isRemote) {
+		//	player.sendMessage(new TextComponentString(con + "], Suction: " + getSuction()));
+		//}
+		//return true;
 		if (!world.isRemote) {
-			player.sendMessage(new TextComponentString(con + "], Suction: " + getSuction()));
+			player.sendMessage(new TextComponentString(
+					"Quintessence: " + internalTank.getAmount() + ", Purity: " + internalTank.getPurity()));
 		}
 		return true;
 	}

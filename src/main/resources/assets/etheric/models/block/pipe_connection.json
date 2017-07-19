@@ -1,0 +1,136 @@
+{
+	"credit": "Made with Blockbench, a free, modern block model editor by JannisX11",
+	"textures": {"0": "etheric:blocks/pipe"},
+	"elements": [
+		{
+			"name": "cube",
+			"from": [6, 6, 0],
+			"to": [10, 10, 6],
+			"shade": true,
+			"faces": {
+				"north": {
+					"uv": [
+						12,
+						12,
+						16,
+						16
+					],
+					"texture": "#0"
+				},
+				"east": {
+					"uv": [
+						4,
+						0,
+						10,
+						4
+					],
+					"texture": "#0"
+				},
+				"south": {
+					"uv": [
+						12,
+						12,
+						16,
+						16
+					],
+					"texture": "#0"
+				},
+				"west": {
+					"uv": [
+						4,
+						0,
+						10,
+						4
+					],
+					"texture": "#0",
+					"rotation": 180
+				},
+				"up": {
+					"uv": [
+						4,
+						0,
+						10,
+						4
+					],
+					"texture": "#0",
+					"rotation": 270
+				},
+				"down": {
+					"uv": [
+						4,
+						0,
+						10,
+						4
+					],
+					"texture": "#0",
+					"rotation": 90
+				}
+			}
+		},
+		{
+			"name": "cube",
+			"from": [10, 10, 6],
+			"to": [6, 6, 0],
+			"shade": true,
+			"faces": {
+				"north": {
+					"uv": [
+						12,
+						12,
+						16,
+						16
+					],
+					"texture": "#0"
+				},
+				"east": {
+					"uv": [
+						10,
+						0,
+						4,
+						4
+					],
+					"texture": "#0"
+				},
+				"south": {
+					"uv": [
+						12,
+						12,
+						16,
+						16
+					],
+					"texture": "#0"
+				},
+				"west": {
+					"uv": [
+						10,
+						0,
+						4,
+						4
+					],
+					"texture": "#0",
+					"rotation": 180
+				},
+				"up": {
+					"uv": [
+						10,
+						0,
+						4,
+						4
+					],
+					"texture": "#0",
+					"rotation": 270
+				},
+				"down": {
+					"uv": [
+						10,
+						0,
+						4,
+						4
+					],
+					"texture": "#0",
+					"rotation": 90
+				}
+			}
+		}
+	]
+}

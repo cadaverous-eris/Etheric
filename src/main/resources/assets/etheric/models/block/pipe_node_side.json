@@ -1,0 +1,20 @@
+{
+	"credit": "Made with Blockbench, a free, modern block model editor by JannisX11",
+	"textures": {"0": "etheric:blocks/pipe", "particle": "etheric:blocks/pipe"},
+	"elements": [
+		{
+			"name": "cube",
+			"from": [6, 6, 6],
+			"to": [10, 10, 6],
+			"shade": true,
+			"faces": {
+				"north": {"uv": [0, 0, 4, 4], "texture": "#0"},
+				"east": {"uv": [0, 0, 0, 4], "texture": "#0"},
+				"south": {"uv": [4, 0, 0, 4], "texture": "#0"},
+				"west": {"uv": [0, 0, 0, 4], "texture": "#0"},
+				"up": {"uv": [0, 0, 4, 0], "texture": "#0"},
+				"down": {"uv": [0, 0, 4, 0], "texture": "#0"}
+			}
+		}
+	]
+}

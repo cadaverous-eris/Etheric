@@ -14,11 +14,13 @@ import etheric.common.tileentity.TileEntityRift;
 import etheric.common.tileentity.TileEntityTestTank;
 import net.minecraft.block.Block;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
+import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
@@ -81,6 +83,8 @@ public class RegistryManager {
 		
 		registerBlockModel(celestial_stone);
 		registerBlockModel(rift);
+		registerBlockModel(pipe);
+		
 		registerItemModel(seeing_stone);
 		
 	}
@@ -98,6 +102,12 @@ public class RegistryManager {
 		
 		RenderingRegistry.registerEntityRenderingHandler(EntityLesserCelestial.class, new RenderLesserCelestial.Factory());
 		
+	}
+	
+	@SideOnly(Side.CLIENT)
+	@SubscribeEvent
+	public static void registerSprites(TextureStitchEvent.Pre event) {
+		event.getMap().registerSprite(new ResourceLocation(Etheric.MODID, "blocks/quintessence_flow"));
 	}
 	
 	private static void registerItemBlock(IForgeRegistry<Item> registry, Block block) {
