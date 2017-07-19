@@ -1,5 +1,6 @@
 package etheric.common.block;
 
+import etheric.common.block.property.UnlistedPropertyBool;
 import etheric.common.block.property.UnlistedPropertyFloat;
 import etheric.common.block.property.UnlistedPropertyInt;
 import etheric.common.capabilty.IQuintessenceCapability;
@@ -35,6 +36,9 @@ public class BlockPipe extends BlockBase implements ITileEntityProvider {
 			new UnlistedPropertyInt("west"), new UnlistedPropertyInt("east") };
 	public static final UnlistedPropertyInt QUINTESSENCE = new UnlistedPropertyInt("quintessence");
 	public static final UnlistedPropertyFloat PURITY = new UnlistedPropertyFloat("purity");
+	public static final UnlistedPropertyBool[] QUINT_CONS = { new UnlistedPropertyBool("q_down"), 
+			new UnlistedPropertyBool("q_up"), new UnlistedPropertyBool("q_north"), new UnlistedPropertyBool("q_south"),
+			new UnlistedPropertyBool("q_west"), new UnlistedPropertyBool("q_east") };
 
 	public BlockPipe(String name) {
 		super(name, Material.ROCK);
@@ -95,6 +99,10 @@ public class BlockPipe extends BlockBase implements ITileEntityProvider {
 			extendedState = extendedState.withProperty(QUINTESSENCE, teQ.getAmount());
 			extendedState = extendedState.withProperty(PURITY, teQ.getPurity());
 		}
+		for (int i = 0; i < QUINT_CONS.length; i++) {
+			extendedState = extendedState.withProperty(QUINT_CONS[i], getQuintConnection(world, pos, EnumFacing.getFront(i)));
+		}
+		
 		return extendedState;
 	}
 	
@@ -108,6 +116,17 @@ public class BlockPipe extends BlockBase implements ITileEntityProvider {
 		}
 		
 		return 0;
+	}
+	
+	private boolean getQuintConnection(IBlockAccess world, BlockPos pos, EnumFacing dir) {
+		TileEntity te = world.getTileEntity(pos.offset(dir));
+		if (te != null && world.getBlockState(pos.offset(dir)).getBlock() == this) {
+			return te.getCapability(QuintessenceCapabilityProvider.quintessenceCapability, dir.getOpposite()).getAmount() > 0;
+		}
+		if (te != null && te.hasCapability(QuintessenceCapabilityProvider.quintessenceCapability, dir.getOpposite())) {
+			return true;
+		}
+		return false;
 	}
 
 	@Override
@@ -155,7 +174,13 @@ public class BlockPipe extends BlockBase implements ITileEntityProvider {
 				CONNECTIONS[4],
 				CONNECTIONS[5],
 				QUINTESSENCE,
-				PURITY
+				PURITY,
+				QUINT_CONS[0],
+				QUINT_CONS[1],
+				QUINT_CONS[2],
+				QUINT_CONS[3],
+				QUINT_CONS[4],
+				QUINT_CONS[5]
 		};
 		return new ExtendedBlockState(this, new IProperty[] {}, unlisted);
 	}

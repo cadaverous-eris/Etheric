@@ -27,14 +27,7 @@ import net.minecraftforge.common.capabilities.Capability;
 
 public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvider {
 
-	private DefaultQuintessenceCapability internalTank = new DefaultQuintessenceCapability(4) {
-		@Override
-		public void onContentsChanged() {
-			TileEntityPipe.this.markDirty();
-			TileEntityPipe.this.world.notifyNeighborsOfStateChange(TileEntityPipe.this.pos, TileEntityPipe.this.getBlockType(), true);
-			TileEntityPipe.this.world.notifyBlockUpdate(pos, getWorld().getBlockState(pos), getWorld().getBlockState(pos), 3);
-		}
-	};
+	private DefaultQuintessenceCapability internalTank = new DefaultQuintessenceCapability(4);
 	private Suction suction = Suction.NO_SUCTION;
 	// d u n s w e
 	private boolean[] connections = { false, false, false, false, false, false };
@@ -224,17 +217,10 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 
 	public boolean activate(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand,
 			EnumFacing side, float hitX, float hitY, float hitZ) {
-		//String con = "[";
-		//for (boolean b : connections) {
-		//	con += (b + ", ");
-		//}
-		//if (!world.isRemote) {
-		//	player.sendMessage(new TextComponentString(con + "], Suction: " + getSuction()));
-		//}
-		//return true;
+		// debug
 		if (!world.isRemote) {
 			player.sendMessage(new TextComponentString(
-					"Quintessence: " + internalTank.getAmount() + ", Purity: " + internalTank.getPurity()));
+					"Quintessence: " + internalTank.getAmount() + ", Purity: " + internalTank.getPurity() + ", Suction: " + getSuction()));
 		}
 		return true;
 	}

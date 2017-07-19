@@ -17,10 +17,9 @@ public class ModelUtil {
 	}
 	
 	// lower north-west to upper south_east 
-	public static List<BakedQuad> createPrism(float x1, float y1, float z1, float x2, float y2, float z2, TextureAtlasSprite sprite, int red, int green, int blue, int alpha) {
+	public static List<BakedQuad> createCuboid(float x1, float y1, float z1, float x2, float y2, float z2, TextureAtlasSprite sprite, int red, int green, int blue, int alpha) {
 		List<BakedQuad> quads = new ArrayList<BakedQuad>();
 		
-		//int color = (red & 0x0ff) << 24 | (green & 0x0ff) << 16 | (blue & 0x0ff) << 8 | (alpha & 0x0ff);
 		int color = (alpha & 0x0ff) << 24 | (blue & 0x0ff) << 16 | (green & 0x0ff) << 8 | (red & 0x0ff);
 		int[] vertexData;
 		
