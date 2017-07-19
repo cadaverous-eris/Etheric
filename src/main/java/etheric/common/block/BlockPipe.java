@@ -1,5 +1,9 @@
 package etheric.common.block;
 
+import java.util.List;
+
+import javax.annotation.Nullable;
+
 import etheric.common.block.property.UnlistedPropertyBool;
 import etheric.common.block.property.UnlistedPropertyFloat;
 import etheric.common.block.property.UnlistedPropertyInt;
@@ -15,6 +19,7 @@ import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyBool;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
@@ -66,13 +71,13 @@ public class BlockPipe extends BlockBase implements ITileEntityProvider {
 	public BlockRenderLayer getBlockLayer() {
 		return BlockRenderLayer.CUTOUT;
 	}
-	
+
 	@Override
 	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
 		IExtendedBlockState extendedState = (IExtendedBlockState) getExtendedState(state, world, pos);
-		
+
 		double min = 0.3125, max = 0.6875;
-		
+
 		double x1 = min, y1 = min, z1 = min;
 		double x2 = max, y2 = max, z2 = max;
 		if (extendedState.getValue(CONNECTIONS[0]) > 0) {
@@ -93,13 +98,42 @@ public class BlockPipe extends BlockBase implements ITileEntityProvider {
 		if (extendedState.getValue(CONNECTIONS[5]) > 0) {
 			x2 = 1;
 		}
-		
-		return new AxisAlignedBB(new Vec3d(x1, y1, z1), new Vec3d(x2, y2, z2));
+
+		return new AxisAlignedBB(x1, y1, z1, x2, y2, z2);
 	}
-	
+
+	public static final AxisAlignedBB NODE_AABB = new AxisAlignedBB(0.375, 0.375, 0.375, 0.625, 0.625, 0.625);
+	public static final AxisAlignedBB[] CONNECTION_AABB = new AxisAlignedBB[] {
+			new AxisAlignedBB(0.375, 0.0, 0.375, 0.625, 0.375, 0.625),
+			new AxisAlignedBB(0.375, 0.625, 0.375, 0.625, 1.0, 0.625),
+			new AxisAlignedBB(0.375, 0.375, 0.0, 0.625, 0.625, 0.375),
+			new AxisAlignedBB(0.375, 0.375, 0.625, 0.625, 0.625, 1.0),
+			new AxisAlignedBB(0.0, 0.375, 0.375, 0.375, 0.625, 0.625),
+			new AxisAlignedBB(0.625, 0.375, 0.375, 1.0, 0.625, 0.625) };
+
+	@Override
+	public void addCollisionBoxToList(IBlockState state, World worldIn, BlockPos pos, AxisAlignedBB entityBox,
+			List<AxisAlignedBB> collidingBoxes, @Nullable Entity entityIn, boolean p_185477_7_) {
+		addCollisionBoxToList(pos, entityBox, collidingBoxes, NODE_AABB);
+		IExtendedBlockState extendedState = (IExtendedBlockState) getExtendedState(state, worldIn, pos);
+
+		for (int i = 0; i < CONNECTIONS.length; i++) {
+			if (extendedState.getValue(CONNECTIONS[i]) > 0) {
+				addCollisionBoxToList(pos, entityBox, collidingBoxes, CONNECTION_AABB[i]);
+			}
+		}
+
+	}
+
+	@Override
+	public boolean isPassable(IBlockAccess worldIn, BlockPos pos) {
+		return true;
+	}
+
 	@Override
 	@SideOnly(Side.CLIENT)
-    public boolean shouldSideBeRendered(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos, EnumFacing side) {
+	public boolean shouldSideBeRendered(IBlockState blockState, IBlockAccess blockAccess, BlockPos pos,
+			EnumFacing side) {
 		return true;
 	}
 
@@ -121,7 +155,7 @@ public class BlockPipe extends BlockBase implements ITileEntityProvider {
 		}
 		return extendedState;
 	}
-	
+
 	private int getConnection(IBlockAccess world, BlockPos pos, EnumFacing dir) {
 		TileEntity te = world.getTileEntity(pos.offset(dir));
 		if (world.getBlockState(pos.offset(dir)).getBlock() == this) {
@@ -130,7 +164,7 @@ public class BlockPipe extends BlockBase implements ITileEntityProvider {
 		if (te != null && te.hasCapability(QuintessenceCapabilityProvider.quintessenceCapability, dir)) {
 			return 2;
 		}
-		
+
 		return 0;
 	}
 
@@ -164,14 +198,8 @@ public class BlockPipe extends BlockBase implements ITileEntityProvider {
 
 	@Override
 	protected BlockStateContainer createBlockState() {
-		IUnlistedProperty[] unlisted = new IUnlistedProperty[] {
-				CONNECTIONS[0],
-				CONNECTIONS[1],
-				CONNECTIONS[2],
-				CONNECTIONS[3],
-				CONNECTIONS[4],
-				CONNECTIONS[5]
-		};
+		IUnlistedProperty[] unlisted = new IUnlistedProperty[] { CONNECTIONS[0], CONNECTIONS[1], CONNECTIONS[2],
+				CONNECTIONS[3], CONNECTIONS[4], CONNECTIONS[5] };
 		return new ExtendedBlockState(this, new IProperty[] {}, unlisted);
 	}
 
