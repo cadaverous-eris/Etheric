@@ -10,7 +10,7 @@ import com.google.common.collect.ImmutableList;
 
 import etheric.Etheric;
 import etheric.RegistryManager;
-import etheric.client.util.ModelUtil;
+import etheric.client.util.RenderUtil;
 import etheric.client.util.QuintessenceRenderUtil;
 import etheric.common.block.BlockPipe;
 import net.minecraft.block.state.IBlockState;
@@ -126,7 +126,6 @@ public class PipeModel implements IModel {
 				for (IBakedModel model : subModels) {
 					quads.addAll(model.getQuads(state, side, rand));
 				}
-				quads.addAll(getFluidModels((IExtendedBlockState) state));
 
 				return quads;
 			}
@@ -136,7 +135,6 @@ public class PipeModel implements IModel {
 		private List<IBakedModel> getSubModels(IExtendedBlockState state) {
 			List<IBakedModel> subModels = new ArrayList<IBakedModel>();
 
-			//subModels.add(node);
 			for (int i = 0; i < 6; i++) {
 				if (state.getValue(BlockPipe.CONNECTIONS[i]) > 0) {
 					subModels.add(connections[i]);
@@ -149,41 +147,6 @@ public class PipeModel implements IModel {
 			}
 			
 			return subModels;
-		}
-		
-		private List<BakedQuad> getFluidModels(IExtendedBlockState state) {
-			List<BakedQuad> fluidModels = new ArrayList<BakedQuad>();
-			int amount = state.getValue(BlockPipe.QUINTESSENCE);
-			float purity = state.getValue(BlockPipe.PURITY);
-			TextureAtlasSprite sprite = ModelLoader.defaultTextureGetter().apply(QuintessenceRenderUtil.flow_texture);
-			
-			int red = QuintessenceRenderUtil.getRed(purity);
-			int green = QuintessenceRenderUtil.getGreen(purity);
-			int blue = QuintessenceRenderUtil.getBlue(purity);
-			
-			if (amount > 0) {
-				fluidModels.addAll(ModelUtil.createCuboid(0.40625F, 0.40625F, 0.40625F, 0.59375F, 0.40625F + (amount * 0.046875F), 0.59375F, sprite, red, green, blue, 255));
-				if (state.getValue(BlockPipe.QUINT_CONS[0])) { // down
-					fluidModels.addAll(ModelUtil.createCuboid(0.5F - (amount * 0.0234375F), 0.0F, 0.5F - (amount * 0.0234375F), 0.5F + (amount * 0.0234375F), 0.40625F, 0.5F + (amount * 0.0234375F), sprite, red, green, blue, 255));
-				}
-				if (state.getValue(BlockPipe.QUINT_CONS[1])) { // up
-					fluidModels.addAll(ModelUtil.createCuboid(0.5F - (amount * 0.0234375F), 0.4375F, 0.5F - (amount * 0.0234375F), 0.5F + (amount * 0.0234375F), 1.0F, 0.5F + (amount * 0.0234375F), sprite, red, green, blue, 255));
-				}
-				if (state.getValue(BlockPipe.QUINT_CONS[2])) { // north
-					fluidModels.addAll(ModelUtil.createCuboid(0.40625F, 0.40625F, 0.0F, 0.59375F, 0.40625F + (amount * 0.046875F), 0.40625F, sprite, red, green, blue, 255));
-				}
-				if (state.getValue(BlockPipe.QUINT_CONS[3])) { // south
-					fluidModels.addAll(ModelUtil.createCuboid(0.40625F, 0.40625F, 0.5625F, 0.59375F, 0.40625F + (amount * 0.046875F), 1.0F, sprite, red, green, blue, 255));
-				}
-				if (state.getValue(BlockPipe.QUINT_CONS[4])) { // west
-					fluidModels.addAll(ModelUtil.createCuboid(0.0F, 0.40625F, 0.40625F, 0.4375F, 0.40625F + (amount * 0.046875F), 0.59375F, sprite, red, green, blue, 255));
-				}
-				if (state.getValue(BlockPipe.QUINT_CONS[5])) { // east
-					fluidModels.addAll(ModelUtil.createCuboid(0.59375F, 0.40625F, 0.40625F, 1.0F, 0.40625F + (amount * 0.046875F), 0.59375F, sprite, red, green, blue, 255));
-				}
-			}
-			
-			return fluidModels;
 		}
 
 		@Override

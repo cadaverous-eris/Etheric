@@ -27,10 +27,14 @@ import net.minecraftforge.common.capabilities.Capability;
 
 public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvider {
 
-	private DefaultQuintessenceCapability internalTank = new DefaultQuintessenceCapability(4);
+	private DefaultQuintessenceCapability internalTank = new DefaultQuintessenceCapability(4) {
+		@Override
+		public void onContentsChanged() {
+			getWorld().notifyBlockUpdate(pos, getWorld().getBlockState(pos), getWorld().getBlockState(pos), 2);
+			//markDirty();
+		}
+	};
 	private Suction suction = Suction.NO_SUCTION;
-	// d u n s w e
-	private boolean[] connections = { false, false, false, false, false, false };
 	private int ticks = 0;
 
 	public TileEntityPipe() {
@@ -53,25 +57,33 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 		return super.getCapability(capability, facing);
 	}
 
-	public void updateConnections() {
-		boolean update = false;
-		for (EnumFacing facing : EnumFacing.VALUES) {
-			TileEntity te = world.getTileEntity(pos.offset(facing));
-			boolean connect = te != null
-					&& te.hasCapability(QuintessenceCapabilityProvider.quintessenceCapability, facing.getOpposite());
-			if (connections[facing.getIndex()] != connect) {
-				update = true;
-			}
-			connections[facing.getIndex()] = connect;
-		}
-		if (update) {
-			getWorld().notifyBlockUpdate(pos, getWorld().getBlockState(pos), getWorld().getBlockState(pos), 3);
-			this.markDirty();
-		}
+	public boolean getConnection(EnumFacing dir) {
+		TileEntity te = world.getTileEntity(pos.offset(dir));
+		return te != null && te.hasCapability(QuintessenceCapabilityProvider.quintessenceCapability, dir.getOpposite());
 	}
 
-	public boolean getConnection(int i) {
-		return connections[i];
+	public boolean getQuintConnection(EnumFacing dir) {
+		TileEntity te = world.getTileEntity(pos.offset(dir));
+		if (te != null && world.getBlockState(pos.offset(dir)).getBlock() == RegistryManager.pipe) {
+			return ((TileEntityPipe) te).getAmount() > 0;
+		}
+		if (te != null && te.hasCapability(QuintessenceCapabilityProvider.quintessenceCapability, dir.getOpposite())) {
+			return true;
+		}
+		return false;
+	}
+	
+	public int getAmount() {
+		return this.internalTank.getAmount();
+	}
+	
+	public float getPurity() {
+		return this.internalTank.getPurity();
+	}
+	
+	@Override
+	public boolean hasFastRenderer() {
+		return true;
 	}
 
 	@Override
@@ -102,9 +114,8 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 
 	public void updateSuction() {
 		Suction suc = Suction.NO_SUCTION;
-		for (int i = 0; i < connections.length; i++) {
-			if (connections[i]) {
-				EnumFacing facing = EnumFacing.getFront(i);
+		for (EnumFacing facing : EnumFacing.VALUES) {
+			if (getConnection(facing)) {
 				TileEntity te = world.getTileEntity(pos.offset(facing));
 				if (te != null && te instanceof ISuctionProvider) {
 					Suction teSuc = ((ISuctionProvider) world.getTileEntity(pos.offset(facing))).getSuction();
@@ -120,9 +131,8 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 	private void flow() {
 		Suction[] suctions = new Suction[6];
 		int maxSuc = 0;
-		for (int i = 0; i < 6; i++) {
-			if (connections[i]) {
-				EnumFacing facing = EnumFacing.getFront(i);
+		for (EnumFacing facing : EnumFacing.VALUES) {
+			if (getConnection(facing)) {
 				TileEntity te = world.getTileEntity(pos.offset(facing));
 				if (te != null && te instanceof ISuctionProvider) {
 					Suction suc = ((ISuctionProvider) te).getSuction();
@@ -157,21 +167,18 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 		IQuintessenceCapability flowInto = te.getCapability(QuintessenceCapabilityProvider.quintessenceCapability,
 				dir.getOpposite());
 		if (flowInto != null) {
-			internalTank.removeAmount(flowInto.addAmount(Math.min(1, internalTank.getAmount()), internalTank.getPurity(), true),
-					true);
+			internalTank.removeAmount(
+					flowInto.addAmount(Math.min(2, internalTank.getAmount()), internalTank.getPurity(), true), true);
 		}
 	}
 
 	@Override
 	public void update() {
 		if (ticks % 10 == 0) {
-			updateConnections();
 			updateSuction();
 			if (!world.isRemote) {
 				flow();
 			}
-			getWorld().notifyBlockUpdate(pos, getWorld().getBlockState(pos), getWorld().getBlockState(pos), 3);
-			this.markDirty();
 		}
 		ticks++;
 	}
@@ -183,9 +190,6 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 			internalTank.readFromNBT((NBTTagCompound) tag.getTag("quintessence"));
 		}
 		suction = Suction.readFromNBT(tag);
-		if (tag.hasKey("connections")) {
-			deserializeConnections(tag.getInteger("connections"));
-		}
 	}
 
 	@Override
@@ -195,32 +199,15 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 		internalTank.writeToNBT(qTag);
 		tag.setTag("quintessence", qTag);
 		suction.writeToNBT(tag);
-		tag.setInteger("connections", serializeConnections());
 		return tag;
-	}
-
-	private int serializeConnections() {
-		int data = 0;
-		for (int i = 0; i < connections.length; i++) {
-			if (connections[i]) {
-				data |= (1 << i);
-			}
-		}
-		return data;
-	}
-
-	private void deserializeConnections(int data) {
-		for (int i = 0; i < connections.length; i++) {
-			connections[i] = (data & (1 << i)) > 0;
-		}
 	}
 
 	public boolean activate(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand,
 			EnumFacing side, float hitX, float hitY, float hitZ) {
 		// debug
 		if (!world.isRemote) {
-			player.sendMessage(new TextComponentString(
-					"Quintessence: " + internalTank.getAmount() + ", Purity: " + internalTank.getPurity() + ", Suction: " + getSuction()));
+			player.sendMessage(new TextComponentString("Quintessence: " + internalTank.getAmount() + ", Purity: "
+					+ internalTank.getPurity() + ", Suction: " + getSuction()));
 		}
 		return true;
 	}

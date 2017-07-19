@@ -3,6 +3,8 @@ entity.lesser_celestial.name=Lesser Celestial
 
 # Blocks
 tile.etheric.celestial_stone.name=Celestial Stone
+tile.etheric.rift.name=Rift
+tile.etheric.pipe.name=Quintessence Pipe
 
 # Items
 item.etheric.seeing_stone.name=Seeing Stone

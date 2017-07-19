@@ -1,6 +1,7 @@
 package etheric;
 
 import etheric.client.renderer.entity.RenderLesserCelestial;
+import etheric.client.renderer.tileentity.TileEntityPipeRenderer;
 import etheric.common.block.BlockBase;
 import etheric.common.block.BlockCreativeTank;
 import etheric.common.block.BlockPipe;
@@ -23,6 +24,7 @@ import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.TextureStitchEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.event.RegistryEvent;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -87,6 +89,7 @@ public class RegistryManager {
 		
 		registerItemModel(seeing_stone);
 		
+		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPipe.class, new TileEntityPipeRenderer());
 	}
 	
 	@SubscribeEvent

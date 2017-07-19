@@ -36,11 +36,6 @@ public class BlockPipe extends BlockBase implements ITileEntityProvider {
 	public static final UnlistedPropertyInt[] CONNECTIONS = { new UnlistedPropertyInt("down"),
 			new UnlistedPropertyInt("up"), new UnlistedPropertyInt("north"), new UnlistedPropertyInt("south"),
 			new UnlistedPropertyInt("west"), new UnlistedPropertyInt("east") };
-	public static final UnlistedPropertyInt QUINTESSENCE = new UnlistedPropertyInt("quintessence");
-	public static final UnlistedPropertyFloat PURITY = new UnlistedPropertyFloat("purity");
-	public static final UnlistedPropertyBool[] QUINT_CONS = { new UnlistedPropertyBool("q_down"), 
-			new UnlistedPropertyBool("q_up"), new UnlistedPropertyBool("q_north"), new UnlistedPropertyBool("q_south"),
-			new UnlistedPropertyBool("q_west"), new UnlistedPropertyBool("q_east") };
 
 	public BlockPipe(String name) {
 		super(name, Material.ROCK);
@@ -124,17 +119,6 @@ public class BlockPipe extends BlockBase implements ITileEntityProvider {
 			int connected = getConnection(world, pos, EnumFacing.getFront(i));
 			extendedState = extendedState.withProperty(CONNECTIONS[i], connected);
 		}
-		if (world.getTileEntity(pos) != null) {
-			TileEntityPipe te = (TileEntityPipe) world.getTileEntity(pos);
-			IQuintessenceCapability teQ = te.getCapability(QuintessenceCapabilityProvider.quintessenceCapability, null);
-			
-			extendedState = extendedState.withProperty(QUINTESSENCE, teQ.getAmount());
-			extendedState = extendedState.withProperty(PURITY, teQ.getPurity());
-		}
-		for (int i = 0; i < QUINT_CONS.length; i++) {
-			extendedState = extendedState.withProperty(QUINT_CONS[i], getQuintConnection(world, pos, EnumFacing.getFront(i)));
-		}
-		
 		return extendedState;
 	}
 	
@@ -149,33 +133,15 @@ public class BlockPipe extends BlockBase implements ITileEntityProvider {
 		
 		return 0;
 	}
-	
-	private boolean getQuintConnection(IBlockAccess world, BlockPos pos, EnumFacing dir) {
-		TileEntity te = world.getTileEntity(pos.offset(dir));
-		if (te != null && world.getBlockState(pos.offset(dir)).getBlock() == this) {
-			return te.getCapability(QuintessenceCapabilityProvider.quintessenceCapability, dir.getOpposite()).getAmount() > 0;
-		}
-		if (te != null && te.hasCapability(QuintessenceCapabilityProvider.quintessenceCapability, dir.getOpposite())) {
-			return true;
-		}
-		return false;
-	}
 
 	@Override
 	public void neighborChanged(IBlockState state, World world, BlockPos pos, Block block, BlockPos fromPos) {
 		super.neighborChanged(state, world, pos, block, fromPos);
-		TileEntityPipe te = (TileEntityPipe) world.getTileEntity(pos);
-		te.updateConnections();
-		te.markDirty();
 	}
 
 	@Override
 	public void onBlockAdded(World world, BlockPos pos, IBlockState state) {
 		super.onBlockAdded(world, pos, state);
-		if (world.getTileEntity(pos) instanceof TileEntityPipe) {
-			((TileEntityPipe) world.getTileEntity(pos)).updateConnections();
-			world.getTileEntity(pos).markDirty();
-		}
 	}
 
 	@Override
@@ -204,15 +170,7 @@ public class BlockPipe extends BlockBase implements ITileEntityProvider {
 				CONNECTIONS[2],
 				CONNECTIONS[3],
 				CONNECTIONS[4],
-				CONNECTIONS[5],
-				QUINTESSENCE,
-				PURITY,
-				QUINT_CONS[0],
-				QUINT_CONS[1],
-				QUINT_CONS[2],
-				QUINT_CONS[3],
-				QUINT_CONS[4],
-				QUINT_CONS[5]
+				CONNECTIONS[5]
 		};
 		return new ExtendedBlockState(this, new IProperty[] {}, unlisted);
 	}
