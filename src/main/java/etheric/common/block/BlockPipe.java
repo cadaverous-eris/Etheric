@@ -20,7 +20,9 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockRenderLayer;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.common.property.ExtendedBlockState;
@@ -68,6 +70,36 @@ public class BlockPipe extends BlockBase implements ITileEntityProvider {
 	@SideOnly(Side.CLIENT)
 	public BlockRenderLayer getBlockLayer() {
 		return BlockRenderLayer.CUTOUT;
+	}
+	
+	@Override
+	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
+		IExtendedBlockState extendedState = (IExtendedBlockState) getExtendedState(state, world, pos);
+		
+		double min = 0.3125, max = 0.6875;
+		
+		double x1 = min, y1 = min, z1 = min;
+		double x2 = max, y2 = max, z2 = max;
+		if (extendedState.getValue(CONNECTIONS[0]) > 0) {
+			y1 = 0;
+		}
+		if (extendedState.getValue(CONNECTIONS[1]) > 0) {
+			y2 = 1;
+		}
+		if (extendedState.getValue(CONNECTIONS[2]) > 0) {
+			z1 = 0;
+		}
+		if (extendedState.getValue(CONNECTIONS[3]) > 0) {
+			z2 = 1;
+		}
+		if (extendedState.getValue(CONNECTIONS[4]) > 0) {
+			x1 = 0;
+		}
+		if (extendedState.getValue(CONNECTIONS[5]) > 0) {
+			x2 = 1;
+		}
+		
+		return new AxisAlignedBB(new Vec3d(x1, y1, z1), new Vec3d(x2, y2, z2));
 	}
 	
 	@Override
