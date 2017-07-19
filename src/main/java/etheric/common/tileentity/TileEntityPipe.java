@@ -31,7 +31,7 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 		@Override
 		public void onContentsChanged() {
 			getWorld().notifyBlockUpdate(pos, getWorld().getBlockState(pos), getWorld().getBlockState(pos), 2);
-			//markDirty();
+			markDirty();
 		}
 	};
 	private Suction suction = Suction.NO_SUCTION;
@@ -168,19 +168,23 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 				dir.getOpposite());
 		if (flowInto != null) {
 			internalTank.removeAmount(
-					flowInto.addAmount(Math.min(2, internalTank.getAmount()), internalTank.getPurity(), true), true);
+					flowInto.addAmount(Math.min(1, internalTank.getAmount()), internalTank.getPurity(), true), true);
 		}
 	}
 
 	@Override
 	public void update() {
-		if (ticks % 10 == 0) {
+		if (ticks % 2 == 0) {
+			updateSuction();
+		}
+		if (ticks <= 0) {
+			ticks = world.rand.nextInt(10) + 1;
 			updateSuction();
 			if (!world.isRemote) {
 				flow();
 			}
 		}
-		ticks++;
+		ticks--;
 	}
 
 	@Override
