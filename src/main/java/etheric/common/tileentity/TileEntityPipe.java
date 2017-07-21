@@ -6,6 +6,8 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import com.google.common.collect.Lists;
+
 import etheric.RegistryManager;
 import etheric.common.block.BlockPipe;
 import etheric.common.capabilty.DefaultQuintessenceCapability;
@@ -24,6 +26,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
+import scala.actors.threadpool.Arrays;
 
 public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvider {
 
@@ -65,7 +68,7 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 	public boolean getQuintConnection(EnumFacing dir) {
 		TileEntity te = world.getTileEntity(pos.offset(dir));
 		if (te != null && world.getBlockState(pos.offset(dir)).getBlock() == RegistryManager.pipe) {
-			return ((TileEntityPipe) te).getAmount() > 0;
+			return ((TileEntityPipe) te).getAmount() > 0 || (dir != EnumFacing.UP && ((TileEntityPipe) te).getSuction().strength <= 0 && getSuction().strength <= 0);
 		}
 		if (te != null && te.hasCapability(QuintessenceCapabilityProvider.quintessenceCapability, dir.getOpposite())) {
 			return true;
@@ -77,8 +80,20 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 		return this.internalTank.getAmount();
 	}
 	
+	public int getCapacity() {
+		return this.internalTank.getCapacity();
+	}
+	
 	public float getPurity() {
 		return this.internalTank.getPurity();
+	}
+	
+	public int getAdjacentPipeAmount(EnumFacing facing) {
+		TileEntity te = world.getTileEntity(pos.offset(facing));
+		if (te != null && te instanceof TileEntityPipe) {
+			return ((TileEntityPipe) te).getAmount();
+		}
+		return 0;
 	}
 	
 	@Override
@@ -127,6 +142,31 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 		}
 		suction = suc.strength > 0 ? new Suction(suc.strength - 1, suc.minPurity, suc.maxPurity) : Suction.NO_SUCTION;
 	}
+	
+	private void distribute() {
+		TileEntity te = world.getTileEntity(pos.down());
+		if (te != null && te instanceof TileEntityPipe) {
+			TileEntityPipe tep = (TileEntityPipe) te;
+			if (tep.getSuction().strength == getSuction().strength && tep.getAmount() < tep.getCapacity()) {
+				internalTank.removeAmount(tep.internalTank.addAmount(Math.min(1, this.internalTank.getAmount()), this.internalTank.getPurity(), true), true);
+			}
+		}
+		List<EnumFacing> horizontals = Lists.newArrayList(EnumFacing.HORIZONTALS);
+		while (getAmount() > 1 && horizontals.size() > 0) {
+			int i = world.rand.nextInt(horizontals.size());
+			if (i < 0) {
+				return;
+			}
+			EnumFacing dir = horizontals.remove(i);
+			te = world.getTileEntity(pos.offset(dir));
+			if (te != null && te instanceof TileEntityPipe) {
+				TileEntityPipe tep = (TileEntityPipe) te;
+				if (tep.getSuction().strength == getSuction().strength && tep.getAmount() < getAmount() - 1) {
+					internalTank.removeAmount(tep.internalTank.addAmount(Math.min(1, this.internalTank.getAmount()), this.internalTank.getPurity(), true), true);
+				}
+			}
+		}
+	}
 
 	private void flow() {
 		Suction[] suctions = new Suction[6];
@@ -168,7 +208,7 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 				dir.getOpposite());
 		if (flowInto != null) {
 			internalTank.removeAmount(
-					flowInto.addAmount(Math.min(1, internalTank.getAmount()), internalTank.getPurity(), true), true);
+					flowInto.addAmount(Math.min(2, internalTank.getAmount()), internalTank.getPurity(), true), true);
 		}
 	}
 
@@ -178,10 +218,13 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 			updateSuction();
 		}
 		if (ticks <= 0) {
-			ticks = world.rand.nextInt(10) + 1;
+			ticks = world.rand.nextInt(12) + 3;
 			updateSuction();
 			if (!world.isRemote) {
 				flow();
+			}
+			if (getSuction().strength <= 0 && getAmount() > 1) {
+				distribute();
 			}
 		}
 		ticks--;
@@ -209,10 +252,10 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 	public boolean activate(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand,
 			EnumFacing side, float hitX, float hitY, float hitZ) {
 		// debug
-		if (!world.isRemote) {
-			player.sendMessage(new TextComponentString("Quintessence: " + internalTank.getAmount() + ", Purity: "
-					+ internalTank.getPurity() + ", Suction: " + getSuction()));
+		if ((player.getHeldItem(EnumHand.MAIN_HAND).getItem() == RegistryManager.seeing_stone || player.getHeldItem(EnumHand.OFF_HAND).getItem() == RegistryManager.seeing_stone) && !world.isRemote) {
+			player.sendMessage(new TextComponentString("Suction: " + getSuction()));
+			return true;
 		}
-		return true;
+		return false;
 	}
 }

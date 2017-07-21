@@ -39,24 +39,34 @@ public class TileEntityPipeRenderer extends FastTESR<TileEntityPipe> {
 		if (amount > 0) {
 			buffer.setTranslation(x - pos.getX(), y - pos.getY(), z - pos.getZ());
 			
-			RenderUtil.addCuboid(buffer, pos, 0.40625F, 0.40625F, 0.40625F, 0.59375F, 0.40625F + (amount * 0.046875F), 0.59375F, sprite, red, green, blue, 255);
+			if ((te.getQuintConnection(EnumFacing.DOWN)) && (!te.getQuintConnection(EnumFacing.NORTH) && !te.getQuintConnection(EnumFacing.SOUTH) && !te.getQuintConnection(EnumFacing.WEST) && !te.getQuintConnection(EnumFacing.EAST))) {
+				RenderUtil.addCuboid(buffer, pos, 0.5F - (amount * 0.0234375F), 0.40625F, 0.5F - (amount * 0.0234375F), 0.5F + (amount * 0.0234375F), 0.40625F + (amount * 0.046875F), 0.5F + (amount * 0.0234375F), sprite, red, green, blue, 255);
+			} else {
+				RenderUtil.addCuboid(buffer, pos, 0.40625F, 0.40625F, 0.40625F, 0.59375F, 0.40625F + (amount * 0.046875F), 0.59375F, sprite, red, green, blue, 255);
+			}
 			if (te.getQuintConnection(EnumFacing.DOWN)) {
-				RenderUtil.addCuboid(buffer, pos, 0.5F - (amount * 0.0234375F), 0.0F, 0.5F - (amount * 0.0234375F), 0.5F + (amount * 0.0234375F), 0.40625F, 0.5F + (amount * 0.0234375F), sprite, red, green, blue, 255);
+				float avg = ((amount + te.getAdjacentPipeAmount(EnumFacing.DOWN)) / 2F);
+				RenderUtil.addCuboid(buffer, pos, 0.5F - (avg * 0.0234375F), 0.0F, 0.5F - (avg * 0.0234375F), 0.5F + (avg * 0.0234375F), 0.40625F, 0.5F + (avg * 0.0234375F), sprite, red, green, blue, 255);
 			}
 			if (te.getQuintConnection(EnumFacing.UP)) {
-				RenderUtil.addCuboid(buffer, pos, 0.5F - (amount * 0.0234375F), 0.40625F + (amount * 0.046875F), 0.5F - (amount * 0.0234375F), 0.5F + (amount * 0.0234375F), 1.0F, 0.5F + (amount * 0.0234375F), sprite, red, green, blue, 255);
+				float avg = ((amount + te.getAdjacentPipeAmount(EnumFacing.UP)) / 2F);
+				RenderUtil.addCuboid(buffer, pos, 0.5F - (avg * 0.0234375F), 0.40625F + (avg * 0.046875F), 0.5F - (avg * 0.0234375F), 0.5F + (avg * 0.0234375F), 1.0F, 0.5F + (amount * 0.0234375F), sprite, red, green, blue, 255);
 			}
 			if (te.getQuintConnection(EnumFacing.NORTH)) {
-				RenderUtil.addCuboid(buffer, pos, 0.40625F, 0.40625F, 0.0F, 0.59375F, 0.40625F + (amount * 0.046875F), 0.40625F, sprite, red, green, blue, 255);
+				float avg = ((amount + te.getAdjacentPipeAmount(EnumFacing.NORTH)) / 2F);
+				RenderUtil.addCuboid(buffer, pos, 0.40625F, 0.40625F, 0.0F, 0.59375F, 0.40625F + (avg * 0.046875F), 0.40625F, sprite, red, green, blue, 255);
 			}
 			if (te.getQuintConnection(EnumFacing.SOUTH)) {
-				RenderUtil.addCuboid(buffer, pos, 0.40625F, 0.40625F, 0.5625F, 0.59375F, 0.40625F + (amount * 0.046875F), 1.0F, sprite, red, green, blue, 255);
+				float avg = ((amount + te.getAdjacentPipeAmount(EnumFacing.SOUTH)) / 2F);
+				RenderUtil.addCuboid(buffer, pos, 0.40625F, 0.40625F, 0.5625F, 0.59375F, 0.40625F + (avg * 0.046875F), 1.0F, sprite, red, green, blue, 255);
 			}
 			if (te.getQuintConnection(EnumFacing.WEST)) {
-				RenderUtil.addCuboid(buffer, pos, 0.0F, 0.40625F, 0.40625F, 0.4375F, 0.40625F + (amount * 0.046875F), 0.59375F, sprite, red, green, blue, 255);
+				float avg = ((amount + te.getAdjacentPipeAmount(EnumFacing.WEST)) / 2F);
+				RenderUtil.addCuboid(buffer, pos, 0.0F, 0.40625F, 0.40625F, 0.4375F, 0.40625F + (avg * 0.046875F), 0.59375F, sprite, red, green, blue, 255);
 			}
 			if (te.getQuintConnection(EnumFacing.EAST)) {
-				RenderUtil.addCuboid(buffer, pos, 0.59375F, 0.40625F, 0.40625F, 1.0F, 0.40625F + (amount * 0.046875F), 0.59375F, sprite, red, green, blue, 255);
+				float avg = ((amount + te.getAdjacentPipeAmount(EnumFacing.EAST)) / 2F);
+				RenderUtil.addCuboid(buffer, pos, 0.59375F, 0.40625F, 0.40625F, 1.0F, 0.40625F + (avg * 0.046875F), 0.59375F, sprite, red, green, blue, 255);
 			}
 		}
 	}

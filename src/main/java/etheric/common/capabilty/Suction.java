@@ -44,7 +44,7 @@ public class Suction {
 	}
 	
 	public String toString() {
-		return "Strength=" + strength + ", Range=[" + minPurity + ", " + maxPurity + "]";
+		return "Strength=" + strength + ", Purity=[" + minPurity + ", " + maxPurity + "]";
 	}
 	
 	public Suction copy() {
