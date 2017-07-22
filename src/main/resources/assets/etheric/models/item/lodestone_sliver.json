@@ -1,0 +1,18 @@
+{
+	"textures": {"0": "etheric:items/lodestone_sliver"},
+	"elements": [
+		{
+			"name": "cube",
+			"from": [7, 6.5, 7],
+			"to": [9, 9.5, 9],
+			"faces": {
+				"north": {"uv": [0, 2, 2, 5], "texture": "#0"},
+				"east": {"uv": [0, 2, 2, 5], "texture": "#0"},
+				"south": {"uv": [0, 2, 2, 5], "texture": "#0"},
+				"west": {"uv": [0, 2, 2, 5], "texture": "#0"},
+				"up": {"uv": [0, 0, 2, 2], "texture": "#0"},
+				"down": {"uv": [0, 5, 2, 7], "texture": "#0"}
+			}
+		}
+	]
+}

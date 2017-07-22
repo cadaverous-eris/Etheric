@@ -50,7 +50,7 @@ public class TileEntityPipeRenderer extends FastTESR<TileEntityPipe> {
 			}
 			if (te.getQuintConnection(EnumFacing.UP)) {
 				float avg = ((amount + te.getAdjacentPipeAmount(EnumFacing.UP)) / 2F);
-				RenderUtil.addCuboid(buffer, pos, 0.5F - (avg * 0.0234375F), 0.40625F + (avg * 0.046875F), 0.5F - (avg * 0.0234375F), 0.5F + (avg * 0.0234375F), 1.0F, 0.5F + (amount * 0.0234375F), sprite, red, green, blue, 255);
+				RenderUtil.addCuboid(buffer, pos, 0.5F - (avg * 0.0234375F), 0.40625F + (avg * 0.046875F), 0.5F - (avg * 0.0234375F), 0.5F + (avg * 0.0234375F), 1.0F, 0.5F + (avg * 0.0234375F), sprite, red, green, blue, 255);
 			}
 			if (te.getQuintConnection(EnumFacing.NORTH)) {
 				float avg = ((amount + te.getAdjacentPipeAmount(EnumFacing.NORTH)) / 2F);

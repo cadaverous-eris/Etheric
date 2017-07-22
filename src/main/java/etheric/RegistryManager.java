@@ -119,6 +119,7 @@ public class RegistryManager {
 	@SubscribeEvent
 	public static void registerSprites(TextureStitchEvent.Pre event) {
 		event.getMap().registerSprite(new ResourceLocation(Etheric.MODID, "blocks/quintessence_flow"));
+		event.getMap().registerSprite(new ResourceLocation(Etheric.MODID, "items/lodestone_sliver"));
 	}
 	
 	private static void registerItemBlock(IForgeRegistry<Item> registry, Block block) {

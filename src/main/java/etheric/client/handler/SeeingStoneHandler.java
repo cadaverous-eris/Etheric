@@ -4,6 +4,8 @@ import com.google.common.base.MoreObjects;
 
 import etheric.Etheric;
 import etheric.RegistryManager;
+import etheric.client.util.QuintessenceRenderUtil;
+import etheric.client.util.RenderUtil;
 import etheric.common.network.MessageStabilityRequest;
 import etheric.common.network.PacketHandler;
 import net.minecraft.client.Minecraft;
@@ -16,10 +18,12 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
 import net.minecraft.client.renderer.entity.Render;
 import net.minecraft.client.renderer.entity.RenderPlayer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Items;
@@ -27,12 +31,18 @@ import net.minecraft.init.MobEffects;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.EnumHandSide;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.storage.MapData;
+import net.minecraftforge.client.event.ModelBakeEvent;
+import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.event.RenderHandEvent;
+import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.client.model.ModelLoaderRegistry;
+import net.minecraftforge.common.model.TRSRTransformation;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -46,6 +56,9 @@ public class SeeingStoneHandler {
 	private static ChunkPos chunkPos = null;
 	private static ChunkPos prevChunkPos = null;
 	private static int dimId, prevDimId;
+	private static IBakedModel lodestone_sliver = null;
+	
+	private static float sliverHeight, sliverPos;
 
 	@SubscribeEvent
 	public static void renderSeeingStone(RenderHandEvent event) {
@@ -103,18 +116,30 @@ public class SeeingStoneHandler {
 		GlStateManager.translate(0F, 0F, -0.1875F);
 		Minecraft.getMinecraft().getRenderItem().renderItem(stack, player,
 				ItemCameraTransforms.TransformType.NONE, false);
-		String text = ("" + stabilityDisplayValue);
-		if (text.length() > 5) {
-			text = text.substring(0, 5);
+		
+		sliverHeight = (stabilityDisplayValue - 0.32F) * 0.16F;
+		if (sliverPos != sliverHeight) {
+			sliverPos += (sliverHeight - sliverPos) * 0.1F;
 		}
-		FontRenderer font = Minecraft.getMinecraft().fontRenderer;
-		int length = font.getStringWidth(text);
-		float scale = 0.00375F;
-		GlStateManager.translate(length / 2F * -scale, font.FONT_HEIGHT * 2 * scale, 0F);
-		GlStateManager.rotate(180F, 0F, 1F, 0F);
-		GlStateManager.rotate(180F, 0F, 0F, 1F);
-		GlStateManager.scale(scale, scale, -scale);
-		font.drawString(text, 0, 0, 0xFF00F0);
+		
+		GlStateManager.translate(0F, sliverPos, 0F);
+		GlStateManager.rotate(player.prevRotationPitch + ((player.rotationPitch - player.prevRotationPitch) * event.getPartialTicks()), 1F, 0F, 0F);
+		GlStateManager.rotate(player.prevRotationYaw + ((player.rotationYaw - player.prevRotationYaw) * event.getPartialTicks()), 0F, 1F, 0F);
+		GlStateManager.scale(0.4F, 0.4F, 0.4F);
+		Minecraft.getMinecraft().getRenderItem().renderItem(stack, lodestone_sliver);
+		
+		//String text = ("" + stabilityDisplayValue);
+		//if (text.length() > 5) {
+		//	text = text.substring(0, 5);
+		//}
+		//FontRenderer font = Minecraft.getMinecraft().fontRenderer;
+		//int length = font.getStringWidth(text);
+		//float scale = 0.00375F;
+		//GlStateManager.translate(length / 2F * -scale, font.FONT_HEIGHT * 2 * scale, 0.5F);
+		//GlStateManager.rotate(180F, 0F, 1F, 0F);
+		//GlStateManager.rotate(180F, 0F, 0F, 1F);
+		//GlStateManager.scale(scale, scale, -scale);
+		//font.drawString(text, 0, 0, 0xFF00F0);
 
 		Minecraft.getMinecraft().entityRenderer.disableLightmap();
 		RenderHelper.disableStandardItemLighting();
@@ -127,6 +152,16 @@ public class SeeingStoneHandler {
 		PacketHandler.INSTANCE.sendToServer(new MessageStabilityRequest(player.getPosition(), player.getUniqueID()));
 	}
 
+	@SubscribeEvent
+    public static void setupModels(ModelBakeEvent event) {
+		try {
+			lodestone_sliver = ModelLoaderRegistry.getModel(new ResourceLocation(Etheric.MODID, "item/lodestone_sliver")).bake(TRSRTransformation.identity(), DefaultVertexFormats.ITEM, ModelLoader.defaultTextureGetter());
+		} catch (Exception e) {
+			Etheric.logger.error("Error loading seeing stone submodel", e);
+			lodestone_sliver = ModelLoaderRegistry.getMissingModel().bake(TRSRTransformation.identity(), DefaultVertexFormats.ITEM, ModelLoader.defaultTextureGetter());
+		}
+	}
+	
 	private static void renderArms() {
 		Minecraft mc = Minecraft.getMinecraft();
 
