@@ -23,6 +23,9 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
@@ -39,6 +42,7 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 	};
 	private Suction suction = Suction.NO_SUCTION;
 	private int ticks = 0;
+	private boolean[] disabledConnections = new boolean[6];
 
 	public TileEntityPipe() {
 		super();
@@ -62,13 +66,27 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 
 	public boolean getConnection(EnumFacing dir) {
 		TileEntity te = world.getTileEntity(pos.offset(dir));
-		return te != null && te.hasCapability(QuintessenceCapabilityProvider.quintessenceCapability, dir.getOpposite());
+		boolean ret = !disabledConnections[dir.getIndex()] && te != null && te.hasCapability(QuintessenceCapabilityProvider.quintessenceCapability, dir.getOpposite());
+		if (te != null && te instanceof TileEntityPipe) {
+			ret &= !((TileEntityPipe) te).connectionDisabled(dir.getOpposite());
+		}
+		return ret;
+	}
+	
+	public boolean connectionDisabled(EnumFacing facing) {
+		return disabledConnections[facing.getIndex()];
 	}
 
 	public boolean getQuintConnection(EnumFacing dir) {
 		TileEntity te = world.getTileEntity(pos.offset(dir));
-		if (te != null && world.getBlockState(pos.offset(dir)).getBlock() == RegistryManager.pipe) {
-			return ((TileEntityPipe) te).getAmount() > 0 || (dir != EnumFacing.UP && ((TileEntityPipe) te).getSuction().strength <= 0 && getSuction().strength <= 0);
+		if (disabledConnections[dir.getIndex()]) {
+			return false;
+		}
+		if (te != null && te instanceof TileEntityPipe) {
+			if (((TileEntityPipe) te).connectionDisabled(dir.getOpposite())) {
+				return false;
+			}
+			return (((TileEntityPipe) te).getAmount() > 0 || (dir != EnumFacing.UP && ((TileEntityPipe) te).getSuction().strength <= 0 && getSuction().strength <= 0));
 		}
 		if (te != null && te.hasCapability(QuintessenceCapabilityProvider.quintessenceCapability, dir.getOpposite())) {
 			return true;
@@ -237,6 +255,9 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 			internalTank.readFromNBT((NBTTagCompound) tag.getTag("quintessence"));
 		}
 		suction = Suction.readFromNBT(tag);
+		if (tag.hasKey("disabledConnections")) {
+			disabledConnections = deserializeDisabledConnections(tag.getInteger("disabledConnections"));
+		}
 	}
 
 	@Override
@@ -246,16 +267,96 @@ public class TileEntityPipe extends TEBase implements ITickable, ISuctionProvide
 		internalTank.writeToNBT(qTag);
 		tag.setTag("quintessence", qTag);
 		suction.writeToNBT(tag);
+		tag.setInteger("disabledConnections", serializeDisabledConnections());
 		return tag;
+	}
+	
+	private int serializeDisabledConnections() {
+		int ret = 0;
+		for (int i = 0; i < disabledConnections.length; i++) {
+			if (disabledConnections[i]) {
+				ret |= 1 << i;
+			}
+		}
+		return ret;
+	}
+	
+	private boolean[] deserializeDisabledConnections(int ser) {
+		boolean[] ret = new boolean[6];
+		for (int i = 0; i < ret.length; i++) {
+			ret[i] = ((ser & (1 << i)) > 0) ? true : false;
+		}
+		return ret;
 	}
 
 	public boolean activate(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand,
 			EnumFacing side, float hitX, float hitY, float hitZ) {
 		// debug
-		if ((player.getHeldItem(EnumHand.MAIN_HAND).getItem() == RegistryManager.seeing_stone || player.getHeldItem(EnumHand.OFF_HAND).getItem() == RegistryManager.seeing_stone) && !world.isRemote) {
+		if (player.getHeldItem(hand).getItem() == RegistryManager.seeing_stone && !world.isRemote) {
 			player.sendMessage(new TextComponentString("Suction: " + getSuction()));
 			return true;
+		} else if (player.getHeldItem(hand).getItem() == RegistryManager.tuning_fork) {
+			EnumFacing connection = viewedConnection(player, side, hitX, hitY, hitZ);
+			if (connection != null) {
+				disabledConnections[connection.getIndex()] = !disabledConnections[connection.getIndex()];
+				getWorld().notifyBlockUpdate(pos, getWorld().getBlockState(pos), getWorld().getBlockState(pos), 3);
+				markDirty();
+				return true;
+			}
 		}
 		return false;
 	}
+	
+	public EnumFacing viewedConnection(EntityPlayer player, EnumFacing side, float hitX, float hitY, float hitZ) {
+		float min = 0.3125F, max = 0.6875F;
+		//System.out.println("(" + hitX + ", " + hitY + ", " + hitZ + ")");
+		if (side == EnumFacing.DOWN || side == EnumFacing.UP) {
+			if (hitZ < min && min < hitX && hitX < max) {
+				return EnumFacing.NORTH;
+			} else if (hitZ > max && min < hitX && hitX < max) {
+				return EnumFacing.SOUTH;
+			} else if (hitX < min && min < hitZ && hitZ < max) {
+				return EnumFacing.WEST;
+			} else if (hitX > max && min < hitZ && hitZ < max) {
+				return EnumFacing.EAST;
+			} else if (min < hitX && hitX < max && min < hitZ && hitZ < max && connectionDisabled(side)) {
+				return hitY < 0.5 ? EnumFacing.DOWN : EnumFacing.UP;
+			}
+		} else if (side == EnumFacing.NORTH || side == EnumFacing.SOUTH) {
+			if (hitY < min && min < hitX && hitX < max) {
+				return EnumFacing.DOWN;
+			} else if (hitY > max && min < hitX && hitX < max) {
+				return EnumFacing.UP;
+			} else if (hitX < min && min < hitY && hitY < max) {
+				return EnumFacing.WEST;
+			} else if (hitX > max && min < hitY && hitY < max) {
+				return EnumFacing.EAST;
+			} else if (min < hitX && hitX < max && min < hitY && hitY < max && connectionDisabled(side)) {
+				return hitZ < 0.5 ? EnumFacing.NORTH : EnumFacing.SOUTH;
+			}
+		} else if (side == EnumFacing.WEST || side == EnumFacing.EAST) {
+			if (hitY < min && min < hitZ && hitZ < max) {
+				return EnumFacing.DOWN;
+			} else if (hitY > max && min < hitZ && hitZ < max) {
+				return EnumFacing.UP;
+			} else if (hitZ < min && min < hitY && hitY < max) {
+				return EnumFacing.NORTH;
+			} else if (hitZ > max && min < hitY && hitY < max) {
+				return EnumFacing.SOUTH;
+			} else if (min < hitZ && hitZ < max && min < hitY && hitY < max && connectionDisabled(side)) {
+				return hitX < 0.5 ? EnumFacing.WEST : EnumFacing.EAST;
+			}
+		}
+		return null;
+	}
+	
+	private boolean getConnectionUnrestricted(EnumFacing dir) {
+		TileEntity te = world.getTileEntity(pos.offset(dir));
+		boolean ret = te != null && te.hasCapability(QuintessenceCapabilityProvider.quintessenceCapability, dir.getOpposite());
+		if (te != null && te instanceof TileEntityPipe) {
+			ret &= !((TileEntityPipe) te).connectionDisabled(dir.getOpposite());
+		}
+		return ret;
+	}
+	
 }

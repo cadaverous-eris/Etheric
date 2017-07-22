@@ -27,6 +27,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
@@ -102,6 +103,46 @@ public class BlockPipe extends BlockBase implements ITileEntityProvider {
 		return new AxisAlignedBB(x1, y1, z1, x2, y2, z2);
 	}
 
+	public static final AxisAlignedBB NODE_SELECTION_AABB = new AxisAlignedBB(0.3125, 0.3125, 0.3125, 0.6875, 0.6875, 0.6875);
+	public static final AxisAlignedBB[] CONNECTION_SELECTION_AABB = new AxisAlignedBB[] {
+			new AxisAlignedBB(0.3125, 0.0, 0.3125, 0.6875, 0.3125, 0.6875),
+			new AxisAlignedBB(0.3125, 0.6875, 0.3125, 0.6875, 1.0, 0.6875),
+			new AxisAlignedBB(0.3125, 0.3125, 0.0, 0.6875, 0.6875, 0.3125),
+			new AxisAlignedBB(0.3125, 0.3125, 0.6875, 0.6875, 0.6875, 1.0),
+			new AxisAlignedBB(0.0, 0.3125, 0.3125, 0.3125, 0.6875, 0.6875),
+			new AxisAlignedBB(0.6875, 0.3125, 0.3125, 1.0, 0.6875, 0.6875)	};
+	
+	@Override
+	public RayTraceResult collisionRayTrace(IBlockState blockState, World worldIn, BlockPos pos, Vec3d start,
+			Vec3d end) {
+		Vec3d vec3d = start.subtract((double)pos.getX(), (double)pos.getY(), (double)pos.getZ());
+        Vec3d vec3d1 = end.subtract((double)pos.getX(), (double)pos.getY(), (double)pos.getZ());
+        IExtendedBlockState state = (IExtendedBlockState) getExtendedState(blockState, worldIn, pos);
+        
+        double minDist = vec3d.distanceTo(vec3d1);
+        RayTraceResult closest = null;
+        for (int i = 0; i < CONNECTION_SELECTION_AABB.length; i++) {
+        	if (state.getValue(CONNECTIONS[i]) <= 0) {
+        		TileEntityPipe te = (TileEntityPipe) worldIn.getTileEntity(pos);
+        		if (te != null && !te.connectionDisabled(EnumFacing.getFront(i))) {
+        			continue;
+        		}
+        	}
+        	RayTraceResult raytraceresult = CONNECTION_SELECTION_AABB[i].calculateIntercept(vec3d, vec3d1);
+        	if (raytraceresult != null && vec3d.distanceTo(raytraceresult.hitVec) < minDist) {
+        		minDist = vec3d.distanceTo(raytraceresult.hitVec);
+        		closest = raytraceresult;
+        	}
+        }
+        
+        RayTraceResult raytraceresult = NODE_SELECTION_AABB.calculateIntercept(vec3d, vec3d1);
+        if (raytraceresult != null && vec3d.distanceTo(raytraceresult.hitVec) < minDist) {
+    		minDist = vec3d.distanceTo(raytraceresult.hitVec);
+    		closest = raytraceresult;
+    	}
+        return closest == null ? null : new RayTraceResult(closest.hitVec.addVector((double)pos.getX(), (double)pos.getY(), (double)pos.getZ()), closest.sideHit, pos);
+	}
+
 	public static final AxisAlignedBB NODE_AABB = new AxisAlignedBB(0.375, 0.375, 0.375, 0.625, 0.625, 0.625);
 	public static final AxisAlignedBB[] CONNECTION_AABB = new AxisAlignedBB[] {
 			new AxisAlignedBB(0.375, 0.0, 0.375, 0.625, 0.375, 0.625),
@@ -157,9 +198,15 @@ public class BlockPipe extends BlockBase implements ITileEntityProvider {
 	}
 
 	private int getConnection(IBlockAccess world, BlockPos pos, EnumFacing dir) {
+		TileEntity tep = world.getTileEntity(pos);
+		if (tep != null && tep instanceof TileEntityPipe) {
+			if (((TileEntityPipe) tep).connectionDisabled(dir)) {
+				return 0;
+			}
+		}
 		TileEntity te = world.getTileEntity(pos.offset(dir));
-		if (world.getBlockState(pos.offset(dir)).getBlock() == this) {
-			return 1;
+		if (te != null && te instanceof TileEntityPipe) {
+			return ((TileEntityPipe) te).connectionDisabled(dir.getOpposite()) ? 0 : 1;
 		}
 		if (te != null && te.hasCapability(QuintessenceCapabilityProvider.quintessenceCapability, dir)) {
 			return 2;
