@@ -11,6 +11,7 @@ import etheric.common.block.BlockTestTank;
 import etheric.common.entity.mob.EntityLesserCelestial;
 import etheric.common.item.ItemMaterial;
 import etheric.common.item.ItemSeeingStone;
+import etheric.common.item.ItemTuningFork;
 import etheric.common.tileentity.TileEntityCreativeTank;
 import etheric.common.tileentity.TileEntityPipe;
 import etheric.common.tileentity.TileEntityRift;
@@ -44,7 +45,7 @@ public class RegistryManager {
 	
 	public static final Block lodestone_ore = null, celestial_stone = null, rift = null, pipe = null;
 	public static final Block creative_tank = null, test_tank = null;
-	public static final Item material = null, seeing_stone = null;
+	public static final Item material = null, seeing_stone = null, tuning_fork = null;
 	
 	@SubscribeEvent
 	public static void registerBlocks(RegistryEvent.Register<Block> event) {
@@ -83,6 +84,7 @@ public class RegistryManager {
 		
 		event.getRegistry().register(new ItemMaterial());
 		event.getRegistry().register(new ItemSeeingStone());
+		event.getRegistry().register(new ItemTuningFork());
 		
 	}
 	
@@ -96,6 +98,7 @@ public class RegistryManager {
 		
 		((ItemMaterial) material).registerModels();
 		registerItemModel(seeing_stone);
+		registerItemModel(tuning_fork);
 		
 		ClientRegistry.bindTileEntitySpecialRenderer(TileEntityPipe.class, new TileEntityPipeRenderer());
 	}

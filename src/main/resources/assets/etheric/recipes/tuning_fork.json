@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " L ",
+    " LL",
+    "L  "
+  ],
+  "key": {
+    "L": {
+      "item": "etheric:material",
+	  "data": 0
+    }
+  },
+  "result": {
+    "item": "etheric:tuning_fork"
+  }
+}
