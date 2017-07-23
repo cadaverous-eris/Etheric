@@ -2,17 +2,23 @@ package etheric.client.handler;
 
 import etheric.Etheric;
 import etheric.RegistryManager;
+import etheric.common.block.BlockPipe;
 import etheric.common.tileentity.TileEntityPipe;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.world.World;
 import net.minecraftforge.client.event.DrawBlockHighlightEvent;
+import net.minecraftforge.common.property.IExtendedBlockState;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
@@ -63,7 +69,15 @@ public class BoundingBoxRenderHandler {
 				vertexbuffer.begin(3, DefaultVertexFormats.POSITION_COLOR);
 				vertexbuffer.setTranslation(-d0, -d1, -d2);
 
-				drawPipeConnectionAABB(vertexbuffer, connection, pos);
+				if (player.getHeldItem(EnumHand.MAIN_HAND).getItem() == RegistryManager.tuning_fork
+						|| player.getHeldItem(EnumHand.OFF_HAND).getItem() == RegistryManager.tuning_fork) {
+					drawPipeConnectionAABB(vertexbuffer, connection, pos);
+				} else {
+					IBlockState blockstate = player.world.getBlockState(pos);
+					IExtendedBlockState state = (IExtendedBlockState) blockstate.getBlock().getExtendedState(blockstate,
+							player.world, pos);
+					drawFullPipeAABB(vertexbuffer, state, pos, player.world);
+				}
 
 				tessellator.draw();
 				vertexbuffer.setTranslation(0D, 0D, 0D);
@@ -97,7 +111,6 @@ public class BoundingBoxRenderHandler {
 					maxX = -0.0020000000949949026D + 0.3125 + pos.getX();
 				} else if (side == EnumFacing.EAST) {
 					minX = 1.0020000000949949026D - 0.3125 + pos.getX();
-					;
 				}
 			}
 			if (side.getAxis() != EnumFacing.Axis.Y) {
@@ -108,7 +121,6 @@ public class BoundingBoxRenderHandler {
 					maxY = -0.0020000000949949026D + 0.3125 + pos.getY();
 				} else if (side == EnumFacing.UP) {
 					minY = 1.0020000000949949026D - 0.3125 + pos.getY();
-					;
 				}
 			}
 			if (side.getAxis() != EnumFacing.Axis.Z) {
@@ -119,28 +131,212 @@ public class BoundingBoxRenderHandler {
 					maxZ = -0.0020000000949949026D + 0.3125 + pos.getZ();
 				} else if (side == EnumFacing.SOUTH) {
 					minZ = 1.0020000000949949026D - 0.3125 + pos.getZ();
-					;
 				}
 			}
 		}
 
-		buffer.pos(minX, minY, minZ).color(0F, 0F, 0f, 0.0F).endVertex();
-		buffer.pos(minX, minY, maxZ).color(0F, 0F, 0f, 0.4F).endVertex();
-		buffer.pos(maxX, minY, maxZ).color(0F, 0F, 0f, 0.4F).endVertex();
-		buffer.pos(maxX, minY, minZ).color(0F, 0F, 0f, 0.4F).endVertex();
-		buffer.pos(minX, minY, minZ).color(0F, 0F, 0f, 0.4F).endVertex();
-		buffer.pos(minX, maxY, minZ).color(0F, 0F, 0f, 0.4F).endVertex();
-		buffer.pos(minX, minY, maxZ).color(0F, 0F, 0f, 0.0F).endVertex();
-		buffer.pos(minX, maxY, maxZ).color(0F, 0F, 0f, 0.4F).endVertex();
-		buffer.pos(maxX, minY, maxZ).color(0F, 0F, 0f, 0.0F).endVertex();
-		buffer.pos(maxX, maxY, maxZ).color(0F, 0F, 0f, 0.4F).endVertex();
-		buffer.pos(maxX, minY, minZ).color(0F, 0F, 0f, 0.0F).endVertex();
-		buffer.pos(maxX, maxY, minZ).color(0F, 0F, 0f, 0.4F).endVertex();
-		buffer.pos(minX, maxY, minZ).color(0F, 0F, 0f, 0.0F).endVertex();
-		buffer.pos(minX, maxY, maxZ).color(0F, 0F, 0f, 0.4F).endVertex();
-		buffer.pos(maxX, maxY, maxZ).color(0F, 0F, 0f, 0.4F).endVertex();
-		buffer.pos(maxX, maxY, minZ).color(0F, 0F, 0f, 0.4F).endVertex();
-		buffer.pos(minX, maxY, minZ).color(0F, 0F, 0f, 0.4F).endVertex();
+		buffer.pos(minX, minY, minZ).color(0F, 0F, 0F, 0.0F).endVertex();
+		buffer.pos(minX, minY, maxZ).color(0F, 0F, 0F, 0.4F).endVertex();
+		buffer.pos(maxX, minY, maxZ).color(0F, 0F, 0F, 0.4F).endVertex();
+		buffer.pos(maxX, minY, minZ).color(0F, 0F, 0F, 0.4F).endVertex();
+		buffer.pos(minX, minY, minZ).color(0F, 0F, 0F, 0.4F).endVertex();
+		buffer.pos(minX, maxY, minZ).color(0F, 0F, 0F, 0.4F).endVertex();
+		buffer.pos(minX, minY, maxZ).color(0F, 0F, 0F, 0.0F).endVertex();
+		buffer.pos(minX, maxY, maxZ).color(0F, 0F, 0F, 0.4F).endVertex();
+		buffer.pos(maxX, minY, maxZ).color(0F, 0F, 0F, 0.0F).endVertex();
+		buffer.pos(maxX, maxY, maxZ).color(0F, 0F, 0F, 0.4F).endVertex();
+		buffer.pos(maxX, minY, minZ).color(0F, 0F, 0F, 0.0F).endVertex();
+		buffer.pos(maxX, maxY, minZ).color(0F, 0F, 0F, 0.4F).endVertex();
+		buffer.pos(minX, maxY, minZ).color(0F, 0F, 0F, 0.0F).endVertex();
+		buffer.pos(minX, maxY, maxZ).color(0F, 0F, 0F, 0.4F).endVertex();
+		buffer.pos(maxX, maxY, maxZ).color(0F, 0F, 0F, 0.4F).endVertex();
+		buffer.pos(maxX, maxY, minZ).color(0F, 0F, 0F, 0.4F).endVertex();
+		buffer.pos(minX, maxY, minZ).color(0F, 0F, 0F, 0.4F).endVertex();
+	}
+
+	private static void drawPartialPipeConnectionAABB(BufferBuilder buffer, EnumFacing side, BlockPos pos) {
+		double minX = -0.0020000000949949026D + pos.getX(), minY = -0.0020000000949949026D + pos.getY(),
+				minZ = -0.0020000000949949026D + pos.getZ();
+		double maxX = 1.0020000000949949026D + pos.getX(), maxY = 1.0020000000949949026D + pos.getY(),
+				maxZ = 1.0020000000949949026D + pos.getZ();
+		double d = 0.3125;
+
+		if (side != null) {
+			switch (side) {
+			case DOWN:
+				buffer.pos(minX + d, minY, minZ + d).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(minX + d, minY, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX - d, minY, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX - d, minY, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX + d, minY, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX + d, minY + d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX + d, minY, maxZ - d).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(minX + d, minY + d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX - d, minY, maxZ - d).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(maxX - d, minY + d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX - d, minY, minZ + d).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(maxX - d, minY + d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				break;
+			case UP:
+				buffer.pos(minX + d, maxY, minZ + d).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(minX + d, maxY, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX - d, maxY, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX - d, maxY, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX + d, maxY, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX + d, maxY - d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX + d, maxY, maxZ - d).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(minX + d, maxY - d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX - d, maxY, maxZ - d).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(maxX - d, maxY - d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX - d, maxY, minZ + d).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(maxX - d, maxY - d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				break;
+			case NORTH:
+				buffer.pos(minX + d, minY + d, minZ).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(minX + d, maxY - d, minZ).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX - d, maxY - d, minZ).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX - d, minY + d, minZ).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX + d, minY + d, minZ).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX + d, minY + d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX + d, maxY - d, minZ).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(minX + d, maxY - d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX - d, maxY - d, minZ).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(maxX - d, maxY - d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX - d, minY + d, minZ).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(maxX - d, minY + d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				break;
+			case SOUTH:
+				buffer.pos(minX + d, minY + d, maxZ).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(minX + d, maxY - d, maxZ).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX - d, maxY - d, maxZ).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX - d, minY + d, maxZ).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX + d, minY + d, maxZ).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX + d, minY + d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX + d, maxY - d, maxZ).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(minX + d, maxY - d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX - d, maxY - d, maxZ).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(maxX - d, maxY - d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX - d, minY + d, maxZ).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(maxX - d, minY + d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				break;
+			case WEST:
+				buffer.pos(minX, minY + d, minZ + d).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(minX, maxY - d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX, maxY - d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX, minY + d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX, minY + d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX + d, minY + d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX, maxY - d, minZ + d).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(minX + d, maxY - d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX, maxY - d, maxZ - d).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(minX + d, maxY - d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(minX, minY + d, maxZ - d).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(minX + d, minY + d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				break;
+			case EAST:
+				buffer.pos(maxX, minY + d, minZ + d).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(maxX, maxY - d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX, maxY - d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX, minY + d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX, minY + d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX - d, minY + d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX, maxY - d, minZ + d).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(maxX - d, maxY - d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX, maxY - d, maxZ - d).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(maxX - d, maxY - d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				buffer.pos(maxX, minY + d, maxZ - d).color(0F, 0F, 0F, 0F).endVertex();
+				buffer.pos(maxX - d, minY + d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+				break;
+			}
+		}
+	}
+
+	private static void drawFullPipeAABB(BufferBuilder buffer, IExtendedBlockState state, BlockPos pos, World world) {
+		double minX = -0.0020000000949949026D + pos.getX(), minY = -0.0020000000949949026D + pos.getY(),
+				minZ = -0.0020000000949949026D + pos.getZ();
+		double maxX = 1.0020000000949949026D + pos.getX(), maxY = 1.0020000000949949026D + pos.getY(),
+				maxZ = 1.0020000000949949026D + pos.getZ();
+		double d = 0.3125;
+
+		boolean[] connections = new boolean[6];
+		TileEntity te = world.getTileEntity(pos);
+		TileEntityPipe tep = null;
+		if (te != null && te instanceof TileEntityPipe) {
+			tep = (TileEntityPipe) te;
+		}
+		if (state.getValue(BlockPipe.CONNECTIONS[0]) > 0 || (tep != null && tep.connectionDisabled(EnumFacing.DOWN))) {
+			drawPartialPipeConnectionAABB(buffer, EnumFacing.DOWN, pos);
+			connections[0] = true;
+		}
+		if (state.getValue(BlockPipe.CONNECTIONS[1]) > 0 || (tep != null && tep.connectionDisabled(EnumFacing.UP))) {
+			drawPartialPipeConnectionAABB(buffer, EnumFacing.UP, pos);
+			connections[1] = true;
+		}
+		if (state.getValue(BlockPipe.CONNECTIONS[2]) > 0 || (tep != null && tep.connectionDisabled(EnumFacing.NORTH))) {
+			drawPartialPipeConnectionAABB(buffer, EnumFacing.NORTH, pos);
+			connections[2] = true;
+		}
+		if (state.getValue(BlockPipe.CONNECTIONS[3]) > 0 || (tep != null && tep.connectionDisabled(EnumFacing.SOUTH))) {
+			drawPartialPipeConnectionAABB(buffer, EnumFacing.SOUTH, pos);
+			connections[3] = true;
+		}
+		if (state.getValue(BlockPipe.CONNECTIONS[4]) > 0 || (tep != null && tep.connectionDisabled(EnumFacing.WEST))) {
+			drawPartialPipeConnectionAABB(buffer, EnumFacing.WEST, pos);
+			connections[4] = true;
+		}
+		if (state.getValue(BlockPipe.CONNECTIONS[5]) > 0 || (tep != null && tep.connectionDisabled(EnumFacing.EAST))) {
+			drawPartialPipeConnectionAABB(buffer, EnumFacing.EAST, pos);
+			connections[5] = true;
+		}
+
+		if (connections[0] == connections[2]) {
+			buffer.pos(minX + d, minY + d, minZ + d).color(0F, 0F, 0F, 0F).endVertex();
+			buffer.pos(maxX - d, minY + d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+		}
+		if (connections[0] == connections[3]) {
+			buffer.pos(maxX - d, minY + d, maxZ - d).color(0F, 0F, 0F, 0F).endVertex();
+			buffer.pos(minX + d, minY + d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+		}
+		if (connections[0] == connections[4]) {
+			buffer.pos(minX + d, minY + d, minZ + d).color(0F, 0F, 0F, 0F).endVertex();
+			buffer.pos(minX + d, minY + d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+		}
+		if (connections[0] == connections[5]) {
+			buffer.pos(maxX - d, minY + d, maxZ - d).color(0F, 0F, 0F, 0F).endVertex();
+			buffer.pos(maxX - d, minY + d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+		}
+		if (connections[1] == connections[2]) {
+			buffer.pos(minX + d, maxY - d, minZ + d).color(0F, 0F, 0F, 0F).endVertex();
+			buffer.pos(maxX - d, maxY - d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+		}
+		if (connections[1] == connections[3]) {
+			buffer.pos(maxX - d, maxY - d, maxZ - d).color(0F, 0F, 0F, 0F).endVertex();
+			buffer.pos(minX + d, maxY - d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+		}
+		if (connections[1] == connections[4]) {
+			buffer.pos(minX + d, maxY - d, minZ + d).color(0F, 0F, 0F, 0F).endVertex();
+			buffer.pos(minX + d, maxY - d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+		}
+		if (connections[1] == connections[5]) {
+			buffer.pos(maxX - d, maxY - d, maxZ - d).color(0F, 0F, 0F, 0F).endVertex();
+			buffer.pos(maxX - d, maxY - d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+		}
+		if (connections[2] == connections[4]) {
+			buffer.pos(minX + d, minY + d, minZ + d).color(0F, 0F, 0F, 0F).endVertex();
+			buffer.pos(minX + d, maxY - d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+		}
+		if (connections[2] == connections[5]) {
+			buffer.pos(maxX - d, minY + d, minZ + d).color(0F, 0F, 0F, 0F).endVertex();
+			buffer.pos(maxX - d, maxY - d, minZ + d).color(0F, 0F, 0F, 0.4F).endVertex();
+		}
+		if (connections[3] == connections[4]) {
+			buffer.pos(minX + d, minY + d, maxZ - d).color(0F, 0F, 0F, 0F).endVertex();
+			buffer.pos(minX + d, maxY - d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+		}
+		if (connections[3] == connections[5]) {
+			buffer.pos(maxX - d, minY + d, maxZ - d).color(0F, 0F, 0F, 0F).endVertex();
+			buffer.pos(maxX - d, maxY - d, maxZ - d).color(0F, 0F, 0F, 0.4F).endVertex();
+		}
 	}
 
 }
