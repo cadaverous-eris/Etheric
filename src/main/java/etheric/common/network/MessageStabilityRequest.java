@@ -56,7 +56,7 @@ public class MessageStabilityRequest implements IMessage {
 		@Override
 		public IMessage onMessage(MessageStabilityRequest message, MessageContext ctx) {
 			EntityPlayerMP player = FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList().getPlayerByUUID(message.id);
-			float stability = StabilityHandler.getChunkData(player.dimension, new ChunkPos(new BlockPos(message.x, 0, message.z)));
+			float stability = StabilityHandler.getChunkData(player.dimension, new ChunkPos(new BlockPos(message.x, 0, message.z))).getStability();
 			
 			return new MessageStabilityData(stability);
 		}

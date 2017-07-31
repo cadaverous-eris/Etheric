@@ -5,11 +5,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import etheric.Etheric;
+import etheric.common.world.stability.event.InstabilityEvent;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.event.world.ChunkDataEvent;
+import net.minecraftforge.event.world.ChunkWatchEvent;
 import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -21,8 +23,9 @@ public class StabilityHandler {
 
 	public static final String STABILITY_KEY = "Etheric Dim Stability";
 
-	private static ConcurrentHashMap<Integer, StabilityWorldData> worldData = new ConcurrentHashMap<Integer, StabilityWorldData>();
+	static ConcurrentHashMap<Integer, StabilityWorldData> worldData = new ConcurrentHashMap<Integer, StabilityWorldData>();
 	private static ConcurrentHashMap<Integer, CopyOnWriteArrayList<ChunkPos>> dirtyChunks = new ConcurrentHashMap<Integer, CopyOnWriteArrayList<ChunkPos>>();
+	private static ConcurrentHashMap<Integer, CopyOnWriteArrayList<InstabilityEvent>> instabilityEvents = new ConcurrentHashMap<Integer, CopyOnWriteArrayList<InstabilityEvent>>();
 
 	public static StabilityWorldData getWorldData(int dim) {
 		return worldData.get(dim);
@@ -30,6 +33,14 @@ public class StabilityHandler {
 
 	public static CopyOnWriteArrayList<ChunkPos> getDirtyChunks(int dim) {
 		return dirtyChunks.get(dim);
+	}
+	
+	public static CopyOnWriteArrayList<InstabilityEvent> getInstabilityEvents(int dim) {
+		return instabilityEvents.get(dim);
+	}
+	
+	public static ConcurrentHashMap<Integer, StabilityWorldData> getWorldData() {
+		return worldData;
 	}
 
 	public static void addWorldData(int dim) {
@@ -46,16 +57,24 @@ public class StabilityHandler {
 		Etheric.logger.info("Removed stability data to handler for dim " + dim);
 	}
 
-	public static void addChunkData(int dim, ChunkPos pos, float stability) {
+	public static void addChunkData(int dim, ChunkPos pos, StabilityData stability) {
 		worldData.get(dim).addChunk(pos, stability);
 	}
 
 	public static void removeChunkData(int dim, ChunkPos pos) {
 		worldData.get(dim).removeChunk(pos);
 	}
+	
+	public static StabilityData getChunkData(int dim, ChunkPos pos) {
+		return worldData.get(dim).getStabilityData(pos);
+	}
 
-	public static float getChunkData(int dim, ChunkPos pos) {
+	public static float getChunkStability(int dim, ChunkPos pos) {
 		return worldData.get(dim).getStability(pos);
+	}
+	
+	public static float getChunkBaseStability(int dim, ChunkPos pos) {
+		return worldData.get(dim).getBaseStability(pos);
 	}
 
 	public static float setStability(int dim, ChunkPos pos, float stability) {
@@ -68,13 +87,14 @@ public class StabilityHandler {
 		return worldData.get(dim).modifyStability(pos, amount);
 	}
 
-	public static float generateChunkStability(Random rand) {
-		return 0.5F + (rand.nextFloat() * 0.5F);
+	public static StabilityData generateChunkStability(Random rand) {
+		float base = 0.6F + (rand.nextFloat() * 0.35F);
+		float offset = -0.1F + (rand.nextFloat() * 0.2F);
+		return new StabilityData(base, base + offset);
 	}
 
 	/*
-	 * ======================================== EVENT HANDLERS
-	 * =====================================
+	 * EVENT HANDLERS
 	 */
 
 	@SubscribeEvent
@@ -82,9 +102,9 @@ public class StabilityHandler {
 		int dim = event.getWorld().provider.getDimension();
 		ChunkPos pos = event.getChunk().getPos();
 
-		float stability = getChunkData(dim, pos);
-		if (stability != -1) {
-			event.getData().setFloat(STABILITY_KEY, stability);
+		StabilityData stability = getChunkData(dim, pos);
+		if (stability != StabilityData.NO_DATA) {
+			event.getData().setTag(STABILITY_KEY, stability.writeToNBT());
 		}
 
 		if (!event.getChunk().isLoaded()) {
@@ -97,13 +117,13 @@ public class StabilityHandler {
 		int dim = event.getWorld().provider.getDimension();
 		ChunkPos pos = event.getChunk().getPos();
 
-		float stability;
-		if (event.getData().hasKey(STABILITY_KEY)) {
-			stability = event.getData().getFloat(STABILITY_KEY);
+		StabilityData stability;
+		if (event.getData().hasKey(STABILITY_KEY, 10)) {
+			stability = new StabilityData(event.getData().getCompoundTag(STABILITY_KEY));
 		} else {
 			stability = generateChunkStability(event.getWorld().rand);
 		}
-		
+
 		addChunkData(dim, pos, stability);
 	}
 
@@ -133,6 +153,11 @@ public class StabilityHandler {
 					event.world.markChunkDirty(new BlockPos(pos.x << 4, 16, pos.z << 4), null);
 				}
 				getDirtyChunks(dim).clear();
+				
+				for (InstabilityEvent e : instabilityEvents.get(dim)) {
+					e.affectChunk(event.world);
+				}
+				instabilityEvents.clear();
 			}
 
 			ticks++;

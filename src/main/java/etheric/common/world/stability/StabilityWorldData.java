@@ -1,41 +1,55 @@
 package etheric.common.world.stability;
 
+import java.util.Collection;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap.KeySetView;
 
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
 
 public class StabilityWorldData {
 	
-	public static final float MAX_STABILITY = 1F;
-	public static final float MIN_STABILITY = 0F;
-	
 	private int dim;
-	private ConcurrentHashMap<ChunkPos, Float> chunkData = new ConcurrentHashMap<ChunkPos, Float>();
+	private ConcurrentHashMap<ChunkPos, StabilityData> chunkData = new ConcurrentHashMap<ChunkPos, StabilityData>();
 	
 	public StabilityWorldData(int dim) {
 		this.dim = dim;
 	}
 	
-	public float getStability(ChunkPos inPos) {
+	public StabilityData getStabilityData(ChunkPos inPos) {
 		for (ChunkPos cPos : chunkData.keySet()) {
 			if (cPos.equals(inPos)) {
 				return chunkData.get(cPos);
+			}
+		}
+		return StabilityData.NO_DATA;
+	}
+	
+	public float getBaseStability(ChunkPos inPos) {
+		for (ChunkPos cPos : chunkData.keySet()) {
+			if (cPos.equals(inPos)) {
+				return chunkData.get(cPos).getBaseStability();
+			}
+		}
+		return -1;
+	}
+	
+	public float getStability(ChunkPos inPos) {
+		for (ChunkPos cPos : chunkData.keySet()) {
+			if (cPos.equals(inPos)) {
+				return chunkData.get(cPos).getStability();
 			}
 		}
 		return -1;
 	}
 	
 	public float setStability(ChunkPos inPos, float stability) {
-		ChunkPos pos = inPos;
 		for (ChunkPos cPos : chunkData.keySet()) {
 			if (cPos.equals(inPos)) {
-				pos = cPos;
-				break;
+				return chunkData.get(cPos).setStability(stability).getStability();
 			}
 		}
-		chunkData.replace(pos, stability);
-		return stability;
+		return -1F;
 	}
 	
 	public float modifyStability(ChunkPos inPos, float amount) {
@@ -43,10 +57,10 @@ public class StabilityWorldData {
 		if (stability == -1) {
 			return -1;
 		}
-		return setStability(inPos, Math.max(MIN_STABILITY, Math.min(MAX_STABILITY, stability + amount)));
+		return setStability(inPos, Math.max(StabilityData.MIN_STABILITY, Math.min(StabilityData.MAX_STABILITY, stability + amount)));
 	}
 	
-	public boolean addChunk(ChunkPos inPos, float stability) {
+	public boolean addChunk(ChunkPos inPos, StabilityData stability) {
 		for (ChunkPos cPos : chunkData.keySet()) {
 			if (cPos.equals(inPos)) {
 				return false;
@@ -64,6 +78,14 @@ public class StabilityWorldData {
 			}
 		}
 		return false;
+	}
+	
+	public Collection<StabilityData> getAllChunkData() {
+		return this.chunkData.values();
+	}
+	
+	public KeySetView<ChunkPos, StabilityData> getChunks() {
+		return this.chunkData.keySet();
 	}
 	
 	public int getDim() {
