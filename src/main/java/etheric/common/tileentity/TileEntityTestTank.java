@@ -26,6 +26,9 @@ public class TileEntityTestTank extends TEBase implements ISuctionProvider {
 
 	@Override
 	public Suction getSuction() {
+		if (internalTank.getAmount() >= internalTank.getCapacity()) {
+			return Suction.NO_SUCTION;
+		}
 		return new Suction(50);
 	}
 

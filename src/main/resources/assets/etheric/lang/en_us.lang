@@ -6,6 +6,7 @@ tile.etheric.celestial_stone.name=Celestial Stone
 tile.etheric.rift.name=Rift
 tile.etheric.pipe.name=Quintessence Pipe
 tile.etheric.lodestone_ore.name=Lodestone Ore
+tile.etheric.stability_projector.name=Stability Projector
 
 # Items
 item.etheric.seeing_stone.name=Seeing Stone

@@ -154,10 +154,10 @@ public class StabilityHandler {
 				}
 				getDirtyChunks(dim).clear();
 				
-				for (InstabilityEvent e : instabilityEvents.get(dim)) {
-					e.affectChunk(event.world);
-				}
-				instabilityEvents.clear();
+				//for (InstabilityEvent e : instabilityEvents.get(dim)) {
+					// e.affectChunk(event.world);
+				//}
+				//instabilityEvents.clear();
 			}
 
 			ticks++;

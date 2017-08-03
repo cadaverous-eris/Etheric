@@ -56,7 +56,6 @@ public class SeeingStoneHandler {
 	private static ChunkPos chunkPos = null;
 	private static ChunkPos prevChunkPos = null;
 	private static int dimId, prevDimId;
-	private static IBakedModel lodestone_sliver = null;
 	
 	private static float sliverHeight, sliverPos;
 
@@ -126,7 +125,7 @@ public class SeeingStoneHandler {
 		GlStateManager.rotate(player.prevRotationPitch + ((player.rotationPitch - player.prevRotationPitch) * event.getPartialTicks()), 1F, 0F, 0F);
 		GlStateManager.rotate(player.prevRotationYaw + ((player.rotationYaw - player.prevRotationYaw) * event.getPartialTicks()), 0F, 1F, 0F);
 		GlStateManager.scale(0.4F, 0.4F, 0.4F);
-		Minecraft.getMinecraft().getRenderItem().renderItem(stack, lodestone_sliver);
+		Minecraft.getMinecraft().getRenderItem().renderItem(stack, RenderUtil.lodestone_sliver);
 		
 		//String text = ("" + stabilityDisplayValue);
 		//if (text.length() > 5) {
@@ -150,16 +149,6 @@ public class SeeingStoneHandler {
 	
 	private static void updateStabilityData(EntityPlayer player) {
 		PacketHandler.INSTANCE.sendToServer(new MessageStabilityRequest(player.getPosition(), player.getUniqueID()));
-	}
-
-	@SubscribeEvent
-    public static void setupModels(ModelBakeEvent event) {
-		try {
-			lodestone_sliver = ModelLoaderRegistry.getModel(new ResourceLocation(Etheric.MODID, "item/lodestone_sliver")).bake(TRSRTransformation.identity(), DefaultVertexFormats.ITEM, ModelLoader.defaultTextureGetter());
-		} catch (Exception e) {
-			Etheric.logger.error("Error loading seeing stone submodel", e);
-			lodestone_sliver = ModelLoaderRegistry.getMissingModel().bake(TRSRTransformation.identity(), DefaultVertexFormats.ITEM, ModelLoader.defaultTextureGetter());
-		}
 	}
 	
 	private static void renderArms() {
