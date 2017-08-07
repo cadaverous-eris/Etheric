@@ -17,6 +17,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
 @Mod.EventBusSubscriber(modid = Etheric.MODID)
 public class StabilityHandler {
@@ -34,11 +35,11 @@ public class StabilityHandler {
 	public static CopyOnWriteArrayList<ChunkPos> getDirtyChunks(int dim) {
 		return dirtyChunks.get(dim);
 	}
-	
+
 	public static CopyOnWriteArrayList<InstabilityEvent> getInstabilityEvents(int dim) {
 		return instabilityEvents.get(dim);
 	}
-	
+
 	public static ConcurrentHashMap<Integer, StabilityWorldData> getWorldData() {
 		return worldData;
 	}
@@ -58,13 +59,17 @@ public class StabilityHandler {
 	}
 
 	public static void addChunkData(int dim, ChunkPos pos, StabilityData stability) {
+		if (!worldData.containsKey(dim)) {
+			addWorldData(dim);
+		}
 		worldData.get(dim).addChunk(pos, stability);
+			
 	}
 
 	public static void removeChunkData(int dim, ChunkPos pos) {
 		worldData.get(dim).removeChunk(pos);
 	}
-	
+
 	public static StabilityData getChunkData(int dim, ChunkPos pos) {
 		return worldData.get(dim).getStabilityData(pos);
 	}
@@ -72,7 +77,7 @@ public class StabilityHandler {
 	public static float getChunkStability(int dim, ChunkPos pos) {
 		return worldData.get(dim).getStability(pos);
 	}
-	
+
 	public static float getChunkBaseStability(int dim, ChunkPos pos) {
 		return worldData.get(dim).getBaseStability(pos);
 	}
@@ -98,36 +103,6 @@ public class StabilityHandler {
 	 */
 
 	@SubscribeEvent
-	public static void onChunkSave(ChunkDataEvent.Save event) {
-		int dim = event.getWorld().provider.getDimension();
-		ChunkPos pos = event.getChunk().getPos();
-
-		StabilityData stability = getChunkData(dim, pos);
-		if (stability != StabilityData.NO_DATA) {
-			event.getData().setTag(STABILITY_KEY, stability.writeToNBT());
-		}
-
-		if (!event.getChunk().isLoaded()) {
-			removeChunkData(dim, pos);
-		}
-	}
-
-	@SubscribeEvent
-	public static void onChunkLoad(ChunkDataEvent.Load event) {
-		int dim = event.getWorld().provider.getDimension();
-		ChunkPos pos = event.getChunk().getPos();
-
-		StabilityData stability;
-		if (event.getData().hasKey(STABILITY_KEY, 10)) {
-			stability = new StabilityData(event.getData().getCompoundTag(STABILITY_KEY));
-		} else {
-			stability = generateChunkStability(event.getWorld().rand);
-		}
-
-		addChunkData(dim, pos, stability);
-	}
-
-	@SubscribeEvent
 	public static void onWorldUnload(WorldEvent.Unload event) {
 		if (!event.getWorld().isRemote) {
 			removeWorldData(event.getWorld().provider.getDimension());
@@ -138,6 +113,40 @@ public class StabilityHandler {
 	public static void onWorldLoad(WorldEvent.Load event) {
 		if (!event.getWorld().isRemote) {
 			addWorldData(event.getWorld().provider.getDimension());
+		}
+	}
+
+	@SubscribeEvent
+	public static void onChunkSave(ChunkDataEvent.Save event) {
+		if (!event.getWorld().isRemote) {
+			int dim = event.getWorld().provider.getDimension();
+			ChunkPos pos = event.getChunk().getPos();
+
+			StabilityData stability = getChunkData(dim, pos);
+			if (stability != StabilityData.NO_DATA) {
+				event.getData().setTag(STABILITY_KEY, stability.writeToNBT());
+			}
+
+			if (!event.getChunk().isLoaded()) {
+				removeChunkData(dim, pos);
+			}
+		}
+	}
+
+	@SubscribeEvent
+	public static void onChunkLoad(ChunkDataEvent.Load event) {
+		if (!event.getWorld().isRemote) {
+			int dim = event.getWorld().provider.getDimension();
+			ChunkPos pos = event.getChunk().getPos();
+
+			StabilityData stability;
+			if (event.getData().hasKey(STABILITY_KEY, 10)) {
+				stability = new StabilityData(event.getData().getCompoundTag(STABILITY_KEY));
+			} else {
+				stability = generateChunkStability(event.getWorld().rand);
+			}
+
+			addChunkData(dim, pos, stability);
 		}
 	}
 
@@ -153,11 +162,11 @@ public class StabilityHandler {
 					event.world.markChunkDirty(new BlockPos(pos.x << 4, 16, pos.z << 4), null);
 				}
 				getDirtyChunks(dim).clear();
-				
-				//for (InstabilityEvent e : instabilityEvents.get(dim)) {
-					// e.affectChunk(event.world);
-				//}
-				//instabilityEvents.clear();
+
+				// for (InstabilityEvent e : instabilityEvents.get(dim)) {
+				// e.affectChunk(event.world);
+				// }
+				// instabilityEvents.clear();
 			}
 
 			ticks++;

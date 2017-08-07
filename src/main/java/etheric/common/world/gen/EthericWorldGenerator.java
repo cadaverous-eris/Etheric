@@ -23,6 +23,7 @@ public class EthericWorldGenerator implements IWorldGenerator {
 		StabilityHandler.addChunkData(world.provider.getDimension(), new ChunkPos(chunkX, chunkZ), StabilityHandler.generateChunkStability(random));
 
 		if (world.provider.getDimensionType() == DimensionType.OVERWORLD) {
+			
 			WorldGenMinable lodestone = new WorldGenMinable(RegistryManager.lodestone_ore.getDefaultState(), Config.LODESTONE_VEIN_SIZE);
 			for (int i = 0; i < Config.LODESTONE_FREQUENCY; i++) {
 				int x = chunkX * 16 + random.nextInt(16);
@@ -30,6 +31,12 @@ public class EthericWorldGenerator implements IWorldGenerator {
 				int z = chunkZ * 16 + random.nextInt(16);
 				lodestone.generate(world, random, new BlockPos(x, y, z));
 			}
+			
+			BlockPos pos = new BlockPos(chunkX * 16, 0, chunkZ * 16);
+			
+			WorldGenRift rift = new WorldGenRift();
+			rift.generate(world, random, pos);
+			
 		}
 		
 	}
